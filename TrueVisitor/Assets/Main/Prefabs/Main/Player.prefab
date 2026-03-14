@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 185184001220952945}
   - component: {fileID: 3286079135936668897}
   - component: {fileID: 3789030974260324100}
+  - component: {fileID: 4614374460283523581}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -47,8 +48,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleFPS
   speed: 5
-  mouseSensitivity: 2
-  cameraHolder: {fileID: 8286299874270666631}
 --- !u!143 &3789030974260324100
 CharacterController:
   m_ObjectHideFlags: 0
@@ -73,7 +72,34 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!54 &4614374460283523581
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2452117471422473193}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 48
+  m_CollisionDetection: 0
 --- !u!1 &6661199890655625526
 GameObject:
   m_ObjectHideFlags: 0
