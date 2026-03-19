@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 3413449614511474522}
   - component: {fileID: 2746145253017474051}
   - component: {fileID: 333743081110792713}
+  - component: {fileID: 8706082098328404774}
+  - component: {fileID: 4286297691938134236}
   m_Layer: 0
   m_Name: Hand
   m_TagString: Untagged
@@ -90,6 +92,51 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8706082098328404774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323738240435750408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b384dc3a8baf2f04f82e4eb0668d55ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHand
+  handMesh: {fileID: 333743081110792713}
+  handAnimator: {fileID: 4286297691938134236}
+  playerCamera: {fileID: 4237171583190268521}
+  normalHandImage: {fileID: 2800000, guid: fa211cafccb953441bd1fa428196f3cf, type: 3}
+  interactHandImage: {fileID: 2800000, guid: c756cfc50f50fd44d819b962bdc42705, type: 3}
+  textureProperty: _BaseMap
+  fallbackTextureProperty: _MainTex
+  interactibleMask:
+    serializedVersion: 2
+    m_Bits: 0
+  interactCheckDistance: 3
+--- !u!95 &4286297691938134236
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323738240435750408}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: fd522208e9a226048916d61108e89be5, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2452117471422473193
 GameObject:
   m_ObjectHideFlags: 0
@@ -192,7 +239,7 @@ MonoBehaviour:
   inputActionsAsset: {fileID: -944628639613478452, guid: 35845fe01580c41289b024647b1d1c53, type: 3}
   moveOrientation: {fileID: 185184001220952945}
   cameraTransform: {fileID: 8286299874270666631}
-  playerHand: {fileID: 0}
+  playerHand: {fileID: 8706082098328404774}
   walkSpeed: 6
   runSpeed: 12
   crouchSpeed: 2
@@ -250,6 +297,7 @@ GameObject:
   - component: {fileID: 4237171583190268521}
   - component: {fileID: 2019577536917146359}
   - component: {fileID: 430886243908279845}
+  - component: {fileID: 289468007713892109}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -471,3 +519,25 @@ MonoBehaviour:
       enableFptlForForwardOpaque: 0
       enableBigTilePrepass: 0
       isFptlEnabled: 0
+--- !u!95 &289468007713892109
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7697741702739676374}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
