@@ -24,6 +24,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool invertY;
     [SerializeField] private bool lockCursorOnStart = true;
 
+    [Header("Camera Feel")]
+    [SerializeField] private float lookSmooth = 18f;
+    [SerializeField] private float cameraShakeAmount = 0.05f;
+    [SerializeField] private float cameraShakeSpeed = 2f;
+    [SerializeField] private float cameraSwayAmount = 0.2f;
+    [SerializeField] private float cameraSwaySmooth = 12f;
+
     [Header("Crouch")]
     [SerializeField] private bool toggleCrouch = true;
     [SerializeField] private float crouchHeight = 1f;
@@ -46,8 +53,15 @@ public class PlayerController : MonoBehaviour
     private float standingHeight;
     private Vector3 standingCenter;
     private float standingCameraHeight;
+
     private float yaw;
     private float pitch;
+
+    private float targetYaw;
+    private float targetPitch;
+
+    private float shakeTime;
+    private Vector2 sway;
 
     private void Awake()
     {
@@ -66,12 +80,14 @@ public class PlayerController : MonoBehaviour
         {
             standingCameraHeight = cameraTransform.localPosition.y;
             pitch = NormalizeAngle(cameraTransform.localEulerAngles.x);
+            targetPitch = pitch;
         }
 
         if (playerHand == null)
             playerHand = GetComponentInChildren<PlayerHand>();
 
         yaw = transform.eulerAngles.y;
+        targetYaw = yaw;
 
         ResolveActions();
     }
@@ -87,31 +103,31 @@ public class PlayerController : MonoBehaviour
         }
 
         if (jumpAction != null) jumpAction.performed += OnJumpPerformed;
+
         if (crouchAction != null)
         {
             crouchAction.performed += OnCrouchPerformed;
             crouchAction.canceled += OnCrouchCanceled;
         }
-        if (interactAction != null) interactAction.performed += OnInteractPerformed;
+
+        if (interactAction != null)
+            interactAction.performed += OnInteractPerformed;
     }
 
     private void OnDisable()
     {
         if (jumpAction != null) jumpAction.performed -= OnJumpPerformed;
+
         if (crouchAction != null)
         {
             crouchAction.performed -= OnCrouchPerformed;
             crouchAction.canceled -= OnCrouchCanceled;
         }
-        if (interactAction != null) interactAction.performed -= OnInteractPerformed;
+
+        if (interactAction != null)
+            interactAction.performed -= OnInteractPerformed;
 
         playerMap?.Disable();
-
-        if (lockCursorOnStart)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
     }
 
     private void Update()
@@ -124,73 +140,71 @@ public class PlayerController : MonoBehaviour
         UpdateHandState();
     }
 
-    private void ResolveActions()
-    {
-        if (inputActionsAsset == null)
-        {
-            Debug.LogError("PlayerController is missing Input Actions Asset. Assign InputSystem_Actions.inputactions.", this);
-            return;
-        }
-
-        playerMap = inputActionsAsset.FindActionMap("Player", true);
-        moveAction = playerMap.FindAction("Move", true);
-        lookAction = playerMap.FindAction("Look", true);
-        sprintAction = playerMap.FindAction("Sprint", false);
-        jumpAction = playerMap.FindAction("Jump", true);
-        crouchAction = playerMap.FindAction("Crouch", true);
-        interactAction = playerMap.FindAction("Interact", true);
-    }
-
     private void HandleLook()
     {
         if (lookAction == null) return;
 
         Vector2 lookInput = lookAction.ReadValue<Vector2>();
 
-        yaw += lookInput.x * lookSensitivity;
+        targetYaw += lookInput.x * lookSensitivity;
 
         float yDelta = lookInput.y * lookSensitivity;
-        pitch += invertY ? yDelta : -yDelta;
-        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        targetPitch += invertY ? yDelta : -yDelta;
+        targetPitch = Mathf.Clamp(targetPitch, minPitch, maxPitch);
+
+        yaw = Mathf.Lerp(yaw, targetYaw, lookSmooth * Time.deltaTime);
+        pitch = Mathf.Lerp(pitch, targetPitch, lookSmooth * Time.deltaTime);
 
         transform.rotation = Quaternion.Euler(0f, yaw, 0f);
 
         if (cameraTransform == null) return;
 
-        if (cameraTransform.parent == transform)
-        {
-            cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-        }
-        else
-        {
-            cameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0f);
-        }
+        sway = Vector2.Lerp(
+            sway,
+            lookInput * cameraSwayAmount,
+            cameraSwaySmooth * Time.deltaTime
+        );
+
+        shakeTime += Time.deltaTime * cameraShakeSpeed;
+
+        float shakeX =
+            (Mathf.PerlinNoise(shakeTime, 0f) - 0.5f)
+            * cameraShakeAmount;
+
+        float shakeY =
+            (Mathf.PerlinNoise(0f, shakeTime) - 0.5f)
+            * cameraShakeAmount;
+
+        float finalPitch = pitch + sway.y + shakeY;
+        float finalYaw = sway.x + shakeX;
+
+        cameraTransform.localRotation =
+            Quaternion.Euler(finalPitch, finalYaw, 0f);
     }
 
     private void UpdateMovementInput()
     {
         if (moveAction != null)
-        {
             moveInput = moveAction.ReadValue<Vector2>();
-        }
     }
 
     private void HandleJumpAndGravity()
     {
-        bool isGrounded = characterController.isGrounded;
+        bool grounded = characterController.isGrounded;
 
-        if (isGrounded && verticalVelocity < 0f)
-        {
+        if (grounded && verticalVelocity < 0f)
             verticalVelocity = -2f;
-        }
 
-        if (jumpRequested && isGrounded && !isCrouched)
+        if (jumpRequested && grounded && !isCrouched)
         {
-            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            verticalVelocity =
+                Mathf.Sqrt(jumpHeight * -2f * gravity);
+
             playerHand?.TriggerJump();
         }
 
         jumpRequested = false;
+
         verticalVelocity += gravity * Time.deltaTime;
     }
 
@@ -199,54 +213,89 @@ public class PlayerController : MonoBehaviour
         Vector3 forward = moveOrientation.forward;
         Vector3 right = moveOrientation.right;
 
-        forward.y = 0f;
-        right.y = 0f;
+        forward.y = 0;
+        right.y = 0;
 
         forward.Normalize();
         right.Normalize();
 
-        Vector3 horizontalMove = (right * moveInput.x + forward * moveInput.y);
+        Vector3 move =
+            right * moveInput.x +
+            forward * moveInput.y;
 
-        if (horizontalMove.sqrMagnitude > 1f)
-        {
-            horizontalMove.Normalize();
-        }
+        if (move.sqrMagnitude > 1)
+            move.Normalize();
 
-        float moveSpeed = GetCurrentMoveSpeed(horizontalMove);
-        Vector3 velocity = horizontalMove * moveSpeed + Vector3.up * verticalVelocity;
+        float speed = GetSpeed(move);
 
-        characterController.Move(velocity * Time.deltaTime);
+        Vector3 velocity =
+            move * speed +
+            Vector3.up * verticalVelocity;
+
+        characterController.Move(
+            velocity * Time.deltaTime
+        );
     }
 
-    private float GetCurrentMoveSpeed(Vector3 horizontalMove)
+    private float GetSpeed(Vector3 move)
     {
         if (isCrouched) return crouchSpeed;
 
-        bool hasMoveInput = horizontalMove.sqrMagnitude > 0.0001f;
-        bool isSprinting = sprintAction != null && sprintAction.IsPressed() && hasMoveInput;
+        bool moving = move.sqrMagnitude > 0.01f;
 
-        return isSprinting ? runSpeed : walkSpeed;
+        bool sprint =
+            sprintAction != null &&
+            sprintAction.IsPressed() &&
+            moving;
+
+        return sprint ? runSpeed : walkSpeed;
     }
 
     private void UpdateCrouchState()
     {
-        // 1. Adjust Character Controller Height and Center
-        float targetHeight = isCrouched ? crouchHeight : standingHeight;
-        float newHeight = Mathf.Lerp(characterController.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+        float targetHeight =
+            isCrouched ? crouchHeight : standingHeight;
+
+        float newHeight =
+            Mathf.Lerp(
+                characterController.height,
+                targetHeight,
+                crouchTransitionSpeed * Time.deltaTime
+            );
+
         characterController.height = newHeight;
 
-        float centerYOffset = (newHeight - standingHeight) * 0.5f;
-        characterController.center = new Vector3(standingCenter.x, standingCenter.y + centerYOffset, standingCenter.z);
+        float centerOffset =
+            (newHeight - standingHeight) * 0.5f;
 
-        // 2. Adjust Camera Position to match crouch
+        characterController.center =
+            new Vector3(
+                standingCenter.x,
+                standingCenter.y + centerOffset,
+                standingCenter.z
+            );
+
         if (cameraTransform != null)
         {
-            float crouchCameraOffset = standingHeight - crouchHeight;
-            float targetCameraY = isCrouched ? standingCameraHeight - crouchCameraOffset : standingCameraHeight;
-            
-            Vector3 camLocalPos = cameraTransform.localPosition;
-            camLocalPos.y = Mathf.Lerp(camLocalPos.y, targetCameraY, crouchTransitionSpeed * Time.deltaTime);
-            cameraTransform.localPosition = camLocalPos;
+            float offset =
+                standingHeight - crouchHeight;
+
+            float targetY =
+                isCrouched
+                ? standingCameraHeight - offset
+                : standingCameraHeight;
+
+            Vector3 pos =
+                cameraTransform.localPosition;
+
+            pos.y =
+                Mathf.Lerp(
+                    pos.y,
+                    targetY,
+                    crouchTransitionSpeed * Time.deltaTime
+                );
+
+            cameraTransform.localPosition = pos;
         }
     }
 
@@ -254,37 +303,72 @@ public class PlayerController : MonoBehaviour
     {
         if (playerHand == null) return;
 
-        bool hasMoveInput = moveInput.sqrMagnitude > 0.0001f;
-        bool isRunning = !isCrouched && hasMoveInput && sprintAction != null && sprintAction.IsPressed();
+        bool moving =
+            moveInput.sqrMagnitude > 0.01f;
 
-        playerHand.SetMovementState(isRunning, isCrouched);
+        bool running =
+            !isCrouched &&
+            moving &&
+            sprintAction != null &&
+            sprintAction.IsPressed();
+
+        playerHand.SetMovementState(
+            running,
+            isCrouched
+        );
     }
 
-    private void OnJumpPerformed(InputAction.CallbackContext context) => jumpRequested = true;
+    private void ResolveActions()
+    {
+        playerMap =
+            inputActionsAsset.FindActionMap("Player", true);
 
-    private void OnCrouchPerformed(InputAction.CallbackContext context)
+        moveAction =
+            playerMap.FindAction("Move", true);
+
+        lookAction =
+            playerMap.FindAction("Look", true);
+
+        sprintAction =
+            playerMap.FindAction("Sprint", false);
+
+        jumpAction =
+            playerMap.FindAction("Jump", true);
+
+        crouchAction =
+            playerMap.FindAction("Crouch", true);
+
+        interactAction =
+            playerMap.FindAction("Interact", true);
+    }
+
+    private void OnJumpPerformed(InputAction.CallbackContext ctx)
+    {
+        jumpRequested = true;
+    }
+
+    private void OnCrouchPerformed(InputAction.CallbackContext ctx)
     {
         if (toggleCrouch)
-        {
             isCrouched = !isCrouched;
-            return;
-        }
-        isCrouched = true;
+        else
+            isCrouched = true;
     }
 
-    private void OnCrouchCanceled(InputAction.CallbackContext context)
+    private void OnCrouchCanceled(InputAction.CallbackContext ctx)
     {
-        if (!toggleCrouch) isCrouched = false;
+        if (!toggleCrouch)
+            isCrouched = false;
+    }
+
+    private void OnInteractPerformed(InputAction.CallbackContext ctx)
+    {
+        playerHand?.TryTriggerInteract();
     }
 
     private static float NormalizeAngle(float angle)
     {
         if (angle > 180f) angle -= 360f;
         return angle;
-    }
-
-    private void OnInteractPerformed(InputAction.CallbackContext context)
-    {
-        playerHand?.TryTriggerInteract();
     }
 }
