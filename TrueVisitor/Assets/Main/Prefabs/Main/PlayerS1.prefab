@@ -363,7 +363,7 @@ MonoBehaviour:
     m_Bits: 1
   standUpRadiusPadding: 0.01
   leanAngle: 10
-  leanOffset: 0.8
+  leanOffset: 0.95
   leanSmooth: 25
   defaultFov: 70
   minZoomFov: 30
