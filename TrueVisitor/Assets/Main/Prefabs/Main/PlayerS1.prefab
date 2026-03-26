@@ -341,33 +341,33 @@ MonoBehaviour:
   walkSpeed: 6
   runSpeed: 11
   crouchSpeed: 2.3
-  acceleration: 18
+  acceleration: 19
   airControl: 0.25
   jumpHeight: 1.25
   coyoteTime: 0.12
   jumpBufferTime: 0.12
-  gravity: -22
+  gravity: -32
   groundedStickForce: -2
   lookSensitivity: 0.12
   lookSmoothing: 10
   minPitch: -82
   maxPitch: 86
   toggleCrouch: 0
-  standingHeight: 2
-  crouchingHeight: 1
+  standingHeight: 2.2
+  crouchingHeight: 1.2
   crouchTransitionSpeed: 12
-  standingCameraHeight: 2
-  crouchingCameraHeight: 1
+  standingCameraHeight: 2.05
+  crouchingCameraHeight: 1.05
   standUpCollisionMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 0
   standUpRadiusPadding: 0.01
   leanAngle: 10
   leanOffset: 0.95
   leanSmooth: 25
-  defaultFov: 70
+  defaultFov: 65
   minZoomFov: 30
-  maxZoomFov: 70
+  maxZoomFov: 65
   zoomStep: 4.5
   zoomWheelScale: 1
   zoomSmooth: 9
@@ -386,7 +386,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   cameraCollisionRadius: 0.12
-  cameraCollisionPadding: 0.02
+  cameraCollisionPadding: 0.5
   interactionDistance: 2.5
   interactionRadius: 0.08
   interactionMask:
