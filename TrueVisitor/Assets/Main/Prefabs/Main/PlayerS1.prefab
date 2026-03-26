@@ -366,7 +366,7 @@ MonoBehaviour:
   leanOffset: 0.95
   leanSmooth: 25
   defaultFov: 65
-  minZoomFov: 30
+  minZoomFov: 15
   maxZoomFov: 65
   zoomStep: 4.5
   zoomWheelScale: 1
