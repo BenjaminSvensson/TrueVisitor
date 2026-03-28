@@ -45633,7 +45633,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 1594624123}
+  m_Mesh: {fileID: 1103442649}
 --- !u!33 &745498635
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -119081,34 +119081,6 @@ PrefabInstance:
     - target: {fileID: 4424244880470922835, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
       propertyPath: m_Name
       value: PlayerS1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.92162573
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.38109076
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.07313959
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0.0051324214
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 44.563
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -11.228
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099264614361207832, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: -5.251
       objectReference: {fileID: 0}
     - target: {fileID: 5241083422738586256, guid: 2b6c78aadc742b347aa209f3a154d096, type: 3}
       propertyPath: m_LocalPosition.x
