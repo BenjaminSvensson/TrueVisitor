@@ -8,6 +8,7 @@ public class CutsceneEvents : MonoBehaviour
     [SerializeField] private GameObject playerCharacter;
     [SerializeField] private Vector3 playerUpstairsPosition;
     [SerializeField] private Quaternion playerUpstairsRotation;
+    [SerializeField] private Animator cutsceneAnimator;
 
     private void Start()
     {
@@ -29,6 +30,7 @@ public class CutsceneEvents : MonoBehaviour
         {
             playerCharacter.transform.position = playerUpstairsPosition;
             playerCharacter.transform.rotation = playerUpstairsRotation;
+            cutsceneAnimator.stopPlayback = true;
         }
     }
 
