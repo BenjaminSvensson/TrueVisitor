@@ -26,10 +26,16 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
     public bool playOnTrigger = true;
     public bool playOnlyOnce = true;
 
+    [Header("Seamless Return")]
+    public bool teleportPlayerToCutsceneEnd = false;
+
     bool hasPlayed = false;
+    PlayerController playerController;
 
     void Start()
     {
+        CachePlayerController();
+
         if (cutsceneCamera != null)
             cutsceneCamera.gameObject.SetActive(false);
     }
@@ -69,18 +75,20 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
             yield return StartCoroutine(Fade(0));
 
         // Play animation
-        cutsceneAnimator.Play(animationName);
+        cutsceneAnimator.Play(animationName, 0, 0f);
+        cutsceneAnimator.Update(0f);
 
-        yield return null;
-
-        float length =
-            cutsceneAnimator.GetCurrentAnimatorStateInfo(0).length;
-
-        yield return new WaitForSeconds(length);
+        yield return new WaitForSeconds(GetCutsceneLength());
 
         // Fade in before return
         if (useFade)
             yield return StartCoroutine(Fade(1));
+
+        if (teleportPlayerToCutsceneEnd)
+        {
+            SampleCutsceneEndPose();
+            TeleportPlayerToCutsceneEnd();
+        }
 
         // Back to player
         cutsceneCamera.gameObject.SetActive(false);
@@ -109,5 +117,59 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    void CachePlayerController()
+    {
+        if (playerController != null)
+            return;
+
+        if (playerCamera != null)
+            playerController = playerCamera.GetComponentInParent<PlayerController>();
+
+        if (playerController == null)
+            playerController = FindAnyObjectByType<PlayerController>();
+    }
+
+    void TeleportPlayerToCutsceneEnd()
+    {
+        if (cutsceneCamera == null)
+            return;
+
+        CachePlayerController();
+
+        if (playerController == null)
+        {
+            Debug.LogWarning($"{nameof(CutsceneTriggerAdvanced)} could not find a {nameof(PlayerController)} for seamless cutscene teleport.", this);
+            return;
+        }
+
+        playerController.TeleportToCameraPose(cutsceneCamera.transform);
+    }
+
+    void SampleCutsceneEndPose()
+    {
+        if (cutsceneAnimator == null || string.IsNullOrEmpty(animationName))
+            return;
+
+        cutsceneAnimator.Play(animationName, 0, 0.9999f);
+        cutsceneAnimator.Update(0f);
+    }
+
+    float GetCutsceneLength()
+    {
+        if (cutsceneAnimator == null || cutsceneAnimator.runtimeAnimatorController == null)
+            return 0f;
+
+        AnimationClip[] clips = cutsceneAnimator.runtimeAnimatorController.animationClips;
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AnimationClip clip = clips[i];
+            if (clip != null && clip.name == animationName)
+                return clip.length;
+        }
+
+        AnimatorStateInfo stateInfo = cutsceneAnimator.GetCurrentAnimatorStateInfo(0);
+        return stateInfo.length;
     }
 }

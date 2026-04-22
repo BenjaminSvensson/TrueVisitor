@@ -26,12 +26,7 @@ public class CutsceneEvents : MonoBehaviour
 
     public void MovePlayerUpstairs()
     {
-        if (playerCharacter != null)
-        {
-            playerCharacter.transform.position = playerUpstairsPosition;
-            playerCharacter.transform.rotation = playerUpstairsRotation;
-            cutsceneAnimator.stopPlayback = true;
-        }
+        // Kept for old animation events. CutsceneTriggerAdvanced now handles seamless teleporting.
     }
 
     private void Update()

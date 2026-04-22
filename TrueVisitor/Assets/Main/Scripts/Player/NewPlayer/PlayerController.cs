@@ -187,6 +187,67 @@ public class PlayerController : MonoBehaviour
         HandleCameraMotion(Time.deltaTime);
     }
 
+    public void TeleportToCameraPose(Transform cameraPose)
+    {
+        if (cameraPose == null || cameraPivot == null)
+        {
+            return;
+        }
+
+        Vector3 targetForward = cameraPose.forward;
+        Vector3 flatForward = Vector3.ProjectOnPlane(targetForward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+        {
+            flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        }
+
+        Quaternion bodyRotation = Quaternion.LookRotation(flatForward.normalized, Vector3.up);
+        _yaw = bodyRotation.eulerAngles.y;
+
+        float horizontalForward = new Vector2(targetForward.x, targetForward.z).magnitude;
+        _pitch = Mathf.Clamp(Mathf.Atan2(-targetForward.y, horizontalForward) * Mathf.Rad2Deg, minPitch, maxPitch);
+
+        _lookInput = Vector2.zero;
+        _smoothedLook = Vector2.zero;
+        _horizontalVelocity = Vector3.zero;
+        _verticalVelocity = groundedStickForce;
+        _jumpBufferTimer = 0f;
+        _coyoteTimer = 0f;
+        _lean = 0f;
+        _bobCycle = 0f;
+        _bobPosition = Vector3.zero;
+        _bobRotation = Vector3.zero;
+        _landingPositionImpulse = 0f;
+        _landingRotationImpulse = 0f;
+
+        _currentCameraHeight = _isCrouching ? crouchingCameraHeight : standingCameraHeight;
+        _targetCameraHeight = _currentCameraHeight;
+
+        Vector3 cameraLocalPosition = _baseCameraLocalPosition;
+        cameraLocalPosition.y = _currentCameraHeight;
+
+        transform.rotation = bodyRotation;
+        cameraPivot.localPosition = cameraLocalPosition;
+        cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+
+        Transform alignmentCamera = playerCamera != null ? playerCamera.transform : cameraPivot;
+        Vector3 rootToCamera = alignmentCamera.position - transform.position;
+        Vector3 targetRootPosition = cameraPose.position - rootToCamera;
+
+        bool controllerWasEnabled = _controller != null && _controller.enabled;
+        if (controllerWasEnabled)
+        {
+            _controller.enabled = false;
+        }
+
+        transform.SetPositionAndRotation(targetRootPosition, bodyRotation);
+
+        if (controllerWasEnabled)
+        {
+            _controller.enabled = true;
+        }
+    }
+
     private void ReadInput()
     {
         _moveInput = _actions.Player.Move.ReadValue<Vector2>();
