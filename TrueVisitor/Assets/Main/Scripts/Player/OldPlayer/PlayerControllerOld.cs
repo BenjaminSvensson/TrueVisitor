@@ -320,6 +320,12 @@ public class PlayerControllerOld : MonoBehaviour
 
     private void ResolveActions()
     {
+        if (inputActionsAsset == null)
+        {
+            Debug.LogWarning($"{nameof(PlayerControllerOld)} has no input action asset assigned.", this);
+            return;
+        }
+
         playerMap =
             inputActionsAsset.FindActionMap("Player", true);
 

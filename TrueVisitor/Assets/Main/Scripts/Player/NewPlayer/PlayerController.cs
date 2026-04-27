@@ -115,6 +115,8 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        ClampTuningValues();
+
         _controller = GetComponent<CharacterController>();
         _actions = new InputSystem_Actions();
         if (playerCamera == null)
@@ -137,7 +139,7 @@ public class PlayerController : MonoBehaviour
 
         _targetHeight = standingHeight;
         _targetCameraHeight = standingCameraHeight;
-        _targetFov = maxZoomFov;
+        _targetFov = Mathf.Clamp(defaultFov, minZoomFov, maxZoomFov);
 
         _controller.height = standingHeight;
         _controller.center = new Vector3(0f, standingHeight * 0.5f, 0f);
@@ -152,8 +154,13 @@ public class PlayerController : MonoBehaviour
 
         if (playerCamera != null)
         {
-            playerCamera.fieldOfView = maxZoomFov;
+            playerCamera.fieldOfView = _targetFov;
         }
+    }
+
+    private void OnValidate()
+    {
+        ClampTuningValues();
     }
 
     private void OnEnable()
@@ -685,5 +692,59 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    private void ClampTuningValues()
+    {
+        walkSpeed = Mathf.Max(0f, walkSpeed);
+        runSpeed = Mathf.Max(walkSpeed, runSpeed);
+        crouchSpeed = Mathf.Max(0f, crouchSpeed);
+        acceleration = Mathf.Max(0f, acceleration);
+        airControl = Mathf.Max(0f, airControl);
+        jumpHeight = Mathf.Max(0f, jumpHeight);
+        coyoteTime = Mathf.Max(0f, coyoteTime);
+        jumpBufferTime = Mathf.Max(0f, jumpBufferTime);
+        gravity = Mathf.Min(-0.01f, gravity);
+        groundedStickForce = Mathf.Min(0f, groundedStickForce);
+
+        if (minPitch > maxPitch)
+        {
+            (minPitch, maxPitch) = (maxPitch, minPitch);
+        }
+        lookSensitivity = Mathf.Max(0f, lookSensitivity);
+        lookSmoothing = Mathf.Max(0f, lookSmoothing);
+
+        standingHeight = Mathf.Max(0.01f, standingHeight);
+        crouchingHeight = Mathf.Clamp(crouchingHeight, 0.01f, standingHeight);
+        crouchTransitionSpeed = Mathf.Max(0f, crouchTransitionSpeed);
+        standingCameraHeight = Mathf.Max(0f, standingCameraHeight);
+        crouchingCameraHeight = Mathf.Clamp(crouchingCameraHeight, 0f, standingCameraHeight);
+        standUpRadiusPadding = Mathf.Max(0f, standUpRadiusPadding);
+
+        minZoomFov = Mathf.Max(1f, minZoomFov);
+        if (minZoomFov > maxZoomFov)
+        {
+            (minZoomFov, maxZoomFov) = (maxZoomFov, minZoomFov);
+        }
+        minZoomFov = Mathf.Max(1f, minZoomFov);
+        defaultFov = Mathf.Clamp(defaultFov, minZoomFov, maxZoomFov);
+        zoomStep = Mathf.Max(0f, zoomStep);
+        zoomWheelScale = Mathf.Max(0f, zoomWheelScale);
+        zoomSmooth = Mathf.Max(0f, zoomSmooth);
+
+        leanSmooth = Mathf.Max(0f, leanSmooth);
+        bobFrequency = Mathf.Max(0f, bobFrequency);
+        bobAmplitude = Mathf.Max(0f, bobAmplitude);
+        runBobMultiplier = Mathf.Max(0f, runBobMultiplier);
+        crouchBobMultiplier = Mathf.Max(0f, crouchBobMultiplier);
+        bobSmoothing = Mathf.Max(0f, bobSmoothing);
+        landingKickPosition = Mathf.Max(0f, landingKickPosition);
+        landingKickRotation = Mathf.Max(0f, landingKickRotation);
+        landingKickDamping = Mathf.Max(0f, landingKickDamping);
+
+        cameraCollisionRadius = Mathf.Max(0.001f, cameraCollisionRadius);
+        cameraCollisionPadding = Mathf.Max(0f, cameraCollisionPadding);
+        interactionDistance = Mathf.Max(0f, interactionDistance);
+        interactionRadius = Mathf.Max(0f, interactionRadius);
     }
 }

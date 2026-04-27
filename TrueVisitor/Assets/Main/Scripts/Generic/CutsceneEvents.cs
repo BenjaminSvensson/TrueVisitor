@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using UnityEngine.InputSystem;
 
 public class CutsceneEvents : MonoBehaviour
@@ -17,10 +16,17 @@ public class CutsceneEvents : MonoBehaviour
     }
     public void OpenDiary()
     {
+        if (diaryUI == null)
+            return;
+
         diaryUI.SetActive(true);
     }
+
     public void CloseDiary()
     {
+        if (diaryUI == null)
+            return;
+
         diaryUI.SetActive(false);
     }
 
@@ -31,6 +37,9 @@ public class CutsceneEvents : MonoBehaviour
 
     private void Update()
     {
+        if (diaryUI == null)
+            return;
+
         if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame && diaryUI.activeSelf)
         {
             CloseDiary();

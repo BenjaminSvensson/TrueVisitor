@@ -28,13 +28,25 @@ public class PlayerHand : MonoBehaviour
     private bool isLookingAtInteractible;
     private bool showingInteractHand;
     private bool hasAppliedHandVisual;
+    private MaterialPropertyBlock propertyBlock;
+    private int texturePropertyId;
+    private int fallbackTexturePropertyId;
+    private int activeTexturePropertyId;
+    private bool hasTextureProperty;
 
     private void Awake()
     {
         if (playerCamera == null)
             playerCamera = Camera.main;
 
+        CacheTextureProperty();
         ApplyHandVisual(false);
+    }
+
+    private void OnValidate()
+    {
+        CacheTextureProperty();
+        hasAppliedHandVisual = false;
     }
 
     private void Update()
@@ -104,18 +116,51 @@ public class PlayerHand : MonoBehaviour
         Texture nextTexture = useInteractVisual ? interactHandImage : normalHandImage;
         if (nextTexture == null) return;
 
-        Material material = handMesh.material;
+        if (!hasTextureProperty)
+        {
+            CacheTextureProperty();
+        }
 
-        if (material.HasProperty(textureProperty))
+        if (!hasTextureProperty)
         {
-            material.SetTexture(textureProperty, nextTexture);
+            return;
         }
-        else if (material.HasProperty(fallbackTextureProperty))
-        {
-            material.SetTexture(fallbackTextureProperty, nextTexture);
-        }
+
+        propertyBlock ??= new MaterialPropertyBlock();
+        handMesh.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetTexture(activeTexturePropertyId, nextTexture);
+        handMesh.SetPropertyBlock(propertyBlock);
 
         showingInteractHand = useInteractVisual;
         hasAppliedHandVisual = true;
+    }
+
+    private void CacheTextureProperty()
+    {
+        if (handMesh == null || handMesh.sharedMaterial == null)
+        {
+            hasTextureProperty = false;
+            return;
+        }
+
+        texturePropertyId = Shader.PropertyToID(textureProperty);
+        fallbackTexturePropertyId = Shader.PropertyToID(fallbackTextureProperty);
+
+        Material material = handMesh.sharedMaterial;
+        if (material.HasProperty(texturePropertyId))
+        {
+            activeTexturePropertyId = texturePropertyId;
+            hasTextureProperty = true;
+            return;
+        }
+
+        if (material.HasProperty(fallbackTexturePropertyId))
+        {
+            activeTexturePropertyId = fallbackTexturePropertyId;
+            hasTextureProperty = true;
+            return;
+        }
+
+        hasTextureProperty = false;
     }
 }

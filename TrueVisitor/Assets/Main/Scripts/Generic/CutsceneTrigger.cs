@@ -30,6 +30,7 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
     public bool teleportPlayerToCutsceneEnd = false;
 
     bool hasPlayed = false;
+    bool isPlaying = false;
     PlayerController playerController;
 
     void Start()
@@ -43,6 +44,7 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (!playOnTrigger) return;
+        if (isPlaying) return;
         if (playOnlyOnce && hasPlayed) return;
 
         if (other.CompareTag("Player"))
@@ -51,8 +53,17 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
         }
     }
 
+    void OnDisable()
+    {
+        isPlaying = false;
+    }
+
     IEnumerator PlayCutscene()
     {
+        if (!CanPlayCutscene())
+            yield break;
+
+        isPlaying = true;
         hasPlayed = true;
 
         // Fade in
@@ -97,6 +108,8 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
         // Fade out to game
         if (useFade)
             yield return StartCoroutine(Fade(0));
+
+        isPlaying = false;
     }
 
     IEnumerator Fade(float target)
@@ -104,6 +117,12 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
         if (fadeImage == null) yield break;
 
         Color c = fadeImage.color;
+        if (fadeSpeed <= 0f)
+        {
+            c.a = target;
+            fadeImage.color = c;
+            yield break;
+        }
 
         while (!Mathf.Approximately(c.a, target))
         {
@@ -129,6 +148,35 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
         if (playerController == null)
             playerController = FindAnyObjectByType<PlayerController>();
+    }
+
+    bool CanPlayCutscene()
+    {
+        if (playerCamera == null)
+        {
+            Debug.LogWarning($"{nameof(CutsceneTriggerAdvanced)} needs a player camera before it can play.", this);
+            return false;
+        }
+
+        if (cutsceneCamera == null)
+        {
+            Debug.LogWarning($"{nameof(CutsceneTriggerAdvanced)} needs a cutscene camera before it can play.", this);
+            return false;
+        }
+
+        if (cutsceneAnimator == null)
+        {
+            Debug.LogWarning($"{nameof(CutsceneTriggerAdvanced)} needs a cutscene animator before it can play.", this);
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(animationName))
+        {
+            Debug.LogWarning($"{nameof(CutsceneTriggerAdvanced)} needs an animation name before it can play.", this);
+            return false;
+        }
+
+        return true;
     }
 
     void TeleportPlayerToCutsceneEnd()
@@ -170,6 +218,9 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
         }
 
         AnimatorStateInfo stateInfo = cutsceneAnimator.GetCurrentAnimatorStateInfo(0);
+        if (float.IsNaN(stateInfo.length) || float.IsInfinity(stateInfo.length))
+            return 0f;
+
         return stateInfo.length;
     }
 }
