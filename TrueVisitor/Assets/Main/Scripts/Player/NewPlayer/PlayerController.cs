@@ -1,11 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public interface IInteractable
-{
-    void Interact();
-}
-
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
@@ -76,6 +71,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float interactionDistance = 2.5f;
     [SerializeField] private float interactionRadius = 0.08f;
     [SerializeField] private LayerMask interactionMask = ~0;
+    [SerializeField] private bool includeTriggerInteractables = true;
+    [SerializeField] private InteractionCursor interactionCursor;
 
     private CharacterController _controller;
     private InputSystem_Actions _actions;
@@ -108,6 +105,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 _baseCameraLocalPosition;
     private float _landingPositionImpulse;
     private float _landingRotationImpulse;
+    private IInteractable _focusedInteractable;
     private readonly RaycastHit[] _cameraCollisionHits = new RaycastHit[8];
     private readonly Collider[] _cameraOverlapHits = new Collider[16];
     private readonly RaycastHit[] _interactionHits = new RaycastHit[16];
@@ -156,6 +154,11 @@ public class PlayerController : MonoBehaviour
         {
             playerCamera.fieldOfView = _targetFov;
         }
+
+        if (interactionCursor == null)
+        {
+            interactionCursor = InteractionCursor.FindOrAttachToCenteredCursor();
+        }
     }
 
     private void OnValidate()
@@ -176,6 +179,11 @@ public class PlayerController : MonoBehaviour
         _actions.Player.Crouch.started -= OnCrouchStarted;
         _actions.Player.Crouch.canceled -= OnCrouchCanceled;
         _actions.Player.Disable();
+        _focusedInteractable = null;
+        if (interactionCursor != null)
+        {
+            interactionCursor.SetCanInteract(false);
+        }
         UnlockCursor();
     }
 
@@ -187,6 +195,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         ReadInput();
+        UpdateInteractionFocus();
         HandleInteraction();
         HandleLook(Time.deltaTime);
         HandleMovement(Time.deltaTime);
@@ -394,14 +403,31 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        _focusedInteractable?.Interact();
+    }
+
+    private void UpdateInteractionFocus()
+    {
+        _focusedInteractable = FindBestInteractable();
+        if (interactionCursor != null)
+        {
+            interactionCursor.SetCanInteract(_focusedInteractable != null);
+        }
+    }
+
+    private IInteractable FindBestInteractable()
+    {
         if (playerCamera == null)
         {
-            return;
+            return null;
         }
 
         Transform cameraTransform = playerCamera.transform;
         Vector3 origin = cameraTransform.position;
         Vector3 direction = cameraTransform.forward;
+        QueryTriggerInteraction triggerInteraction = includeTriggerInteractables
+            ? QueryTriggerInteraction.Collide
+            : QueryTriggerInteraction.Ignore;
 
         int hitCount = Physics.SphereCastNonAlloc(
             origin,
@@ -409,8 +435,8 @@ public class PlayerController : MonoBehaviour
             direction,
             _interactionHits,
             interactionDistance,
-            interactionMask,
-            QueryTriggerInteraction.Ignore
+            GetInteractionMask(),
+            triggerInteraction
         );
 
         IInteractable bestInteractable = null;
@@ -437,7 +463,12 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        bestInteractable?.Interact();
+        return bestInteractable;
+    }
+
+    private int GetInteractionMask()
+    {
+        return interactionMask.value == 0 ? Physics.DefaultRaycastLayers : interactionMask.value;
     }
 
     private void HandleCameraMotion(float deltaTime)

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class CutsceneTriggerAdvanced : MonoBehaviour
@@ -31,6 +32,7 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
     bool hasPlayed = false;
     bool isPlaying = false;
+    bool skipRequested = false;
     PlayerController playerController;
 
     void Start()
@@ -56,6 +58,7 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
     void OnDisable()
     {
         isPlaying = false;
+        skipRequested = false;
     }
 
     IEnumerator PlayCutscene()
@@ -64,11 +67,18 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
             yield break;
 
         isPlaying = true;
+        skipRequested = false;
         hasPlayed = true;
 
         // Fade in
         if (useFade)
-            yield return StartCoroutine(Fade(1));
+            yield return StartCoroutine(Fade(1, true));
+
+        if (skipRequested)
+        {
+            yield return StartCoroutine(FinishCutscene(true));
+            yield break;
+        }
 
         // Switch camera
         playerCamera.gameObject.SetActive(false);
@@ -83,20 +93,41 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
         // Fade out
         if (useFade)
-            yield return StartCoroutine(Fade(0));
+            yield return StartCoroutine(Fade(0, true));
+
+        if (skipRequested)
+        {
+            yield return StartCoroutine(FinishCutscene(true));
+            yield break;
+        }
 
         // Play animation
         cutsceneAnimator.Play(animationName, 0, 0f);
         cutsceneAnimator.Update(0f);
 
-        yield return new WaitForSeconds(GetCutsceneLength());
+        yield return StartCoroutine(WaitForCutsceneOrSkip(GetCutsceneLength()));
+
+        yield return StartCoroutine(FinishCutscene(skipRequested));
+    }
+
+    IEnumerator FinishCutscene(bool skipped)
+    {
+        if (skipped && useSound && audioSource != null)
+        {
+            audioSource.Stop();
+        }
 
         // Fade in before return
-        if (useFade)
-            yield return StartCoroutine(Fade(1));
+        if (useFade && !skipped)
+            yield return StartCoroutine(Fade(1, false));
 
         if (teleportPlayerToCutsceneEnd)
         {
+            if (cutsceneCamera != null && !cutsceneCamera.gameObject.activeSelf)
+            {
+                cutsceneCamera.gameObject.SetActive(true);
+            }
+
             SampleCutsceneEndPose();
             TeleportPlayerToCutsceneEnd();
         }
@@ -107,12 +138,29 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
         // Fade out to game
         if (useFade)
-            yield return StartCoroutine(Fade(0));
+            yield return StartCoroutine(Fade(0, false));
 
+        skipRequested = false;
         isPlaying = false;
     }
 
-    IEnumerator Fade(float target)
+    IEnumerator WaitForCutsceneOrSkip(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (WasSkipPressedThisFrame())
+            {
+                skipRequested = true;
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    IEnumerator Fade(float target, bool allowSkip)
     {
         if (fadeImage == null) yield break;
 
@@ -126,6 +174,12 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
         while (!Mathf.Approximately(c.a, target))
         {
+            if (allowSkip && WasSkipPressedThisFrame())
+            {
+                skipRequested = true;
+                yield break;
+            }
+
             c.a = Mathf.MoveTowards(
                 c.a,
                 target,
@@ -136,6 +190,15 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    bool WasSkipPressedThisFrame()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+            return false;
+
+        return keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
     }
 
     void CachePlayerController()
