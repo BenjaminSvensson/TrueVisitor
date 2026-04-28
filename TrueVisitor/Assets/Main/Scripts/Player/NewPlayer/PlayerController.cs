@@ -70,7 +70,8 @@ public class PlayerController : MonoBehaviour
     [Header("Interaction")]
     [SerializeField] private float interactionDistance = 2.5f;
     [SerializeField] private float interactionRadius = 0.08f;
-    [SerializeField] private LayerMask interactionMask = ~0;
+    [SerializeField] private float interactionAimRadius = 0.45f;
+    [SerializeField] private string interactionLayerName = "Interact";
     [SerializeField] private bool includeTriggerInteractables = true;
     [SerializeField] private InteractionCursor interactionCursor;
 
@@ -105,10 +106,12 @@ public class PlayerController : MonoBehaviour
     private Vector3 _baseCameraLocalPosition;
     private float _landingPositionImpulse;
     private float _landingRotationImpulse;
+    private int _interactionLayerMask;
     private IInteractable _focusedInteractable;
     private readonly RaycastHit[] _cameraCollisionHits = new RaycastHit[8];
     private readonly Collider[] _cameraOverlapHits = new Collider[16];
     private readonly RaycastHit[] _interactionHits = new RaycastHit[16];
+    private readonly Collider[] _interactionOverlapHits = new Collider[32];
     private readonly Collider[] _standUpHits = new Collider[16];
 
     private void Awake()
@@ -159,6 +162,8 @@ public class PlayerController : MonoBehaviour
         {
             interactionCursor = InteractionCursor.FindOrAttachToCenteredCursor();
         }
+
+        ResolveInteractionLayerMask();
     }
 
     private void OnValidate()
@@ -425,6 +430,12 @@ public class PlayerController : MonoBehaviour
         Transform cameraTransform = playerCamera.transform;
         Vector3 origin = cameraTransform.position;
         Vector3 direction = cameraTransform.forward;
+        int interactionMask = GetInteractionMask();
+        if (interactionMask == 0)
+        {
+            return null;
+        }
+
         QueryTriggerInteraction triggerInteraction = includeTriggerInteractables
             ? QueryTriggerInteraction.Collide
             : QueryTriggerInteraction.Ignore;
@@ -435,12 +446,12 @@ public class PlayerController : MonoBehaviour
             direction,
             _interactionHits,
             interactionDistance,
-            GetInteractionMask(),
+            interactionMask,
             triggerInteraction
         );
 
         IInteractable bestInteractable = null;
-        float nearestDistance = float.MaxValue;
+        float bestScore = float.MaxValue;
 
         for (int i = 0; i < hitCount; i++)
         {
@@ -456,9 +467,32 @@ public class PlayerController : MonoBehaviour
                 continue;
             }
 
-            if (hit.distance < nearestDistance)
+            if (hit.distance < bestScore)
             {
-                nearestDistance = hit.distance;
+                bestScore = hit.distance;
+                bestInteractable = interactable;
+            }
+        }
+
+        int overlapCount = Physics.OverlapSphereNonAlloc(
+            origin,
+            interactionDistance + interactionAimRadius,
+            _interactionOverlapHits,
+            interactionMask,
+            triggerInteraction
+        );
+
+        for (int i = 0; i < overlapCount; i++)
+        {
+            Collider candidate = _interactionOverlapHits[i];
+            if (!TryGetInteractionCandidate(candidate, origin, direction, out IInteractable interactable, out float score))
+            {
+                continue;
+            }
+
+            if (score < bestScore)
+            {
+                bestScore = score;
                 bestInteractable = interactable;
             }
         }
@@ -466,9 +500,70 @@ public class PlayerController : MonoBehaviour
         return bestInteractable;
     }
 
+    private bool TryGetInteractionCandidate(
+        Collider candidate,
+        Vector3 origin,
+        Vector3 direction,
+        out IInteractable interactable,
+        out float score)
+    {
+        interactable = null;
+        score = float.MaxValue;
+
+        if (candidate == null)
+        {
+            return false;
+        }
+
+        interactable = candidate.GetComponentInParent<IInteractable>();
+        if (interactable == null)
+        {
+            return false;
+        }
+
+        Bounds bounds = candidate.bounds;
+        float centerForwardDistance = Mathf.Clamp(Vector3.Dot(bounds.center - origin, direction), 0f, interactionDistance);
+        Vector3 closestPointOnViewRay = origin + direction * centerForwardDistance;
+        Vector3 closestColliderPoint = candidate.ClosestPoint(closestPointOnViewRay);
+        Vector3 toCandidate = closestColliderPoint - origin;
+
+        float forwardDistance = Vector3.Dot(toCandidate, direction);
+        if (forwardDistance < 0f || forwardDistance > interactionDistance)
+        {
+            return false;
+        }
+
+        float perpendicularDistance = (toCandidate - direction * forwardDistance).magnitude;
+        if (perpendicularDistance > interactionAimRadius)
+        {
+            return false;
+        }
+
+        score = forwardDistance + perpendicularDistance * 2f;
+        return true;
+    }
+
     private int GetInteractionMask()
     {
-        return interactionMask.value == 0 ? Physics.DefaultRaycastLayers : interactionMask.value;
+        if (_interactionLayerMask == 0)
+        {
+            ResolveInteractionLayerMask();
+        }
+
+        return _interactionLayerMask;
+    }
+
+    private void ResolveInteractionLayerMask()
+    {
+        int layer = LayerMask.NameToLayer(interactionLayerName);
+        if (layer == -1)
+        {
+            _interactionLayerMask = 0;
+            Debug.LogWarning($"{nameof(PlayerController)} could not find an interaction layer named '{interactionLayerName}'.", this);
+            return;
+        }
+
+        _interactionLayerMask = 1 << layer;
     }
 
     private void HandleCameraMotion(float deltaTime)
@@ -777,5 +872,6 @@ public class PlayerController : MonoBehaviour
         cameraCollisionPadding = Mathf.Max(0f, cameraCollisionPadding);
         interactionDistance = Mathf.Max(0f, interactionDistance);
         interactionRadius = Mathf.Max(0f, interactionRadius);
+        interactionAimRadius = Mathf.Max(interactionRadius, interactionAimRadius);
     }
 }
