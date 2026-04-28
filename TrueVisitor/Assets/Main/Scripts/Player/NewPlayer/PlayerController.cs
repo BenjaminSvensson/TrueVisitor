@@ -74,9 +74,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string interactionLayerName = "Interact";
     [SerializeField] private bool includeTriggerInteractables = true;
     [SerializeField] private InteractionCursor interactionCursor;
-    [SerializeField] private bool visualizeInteractionChecks = true;
-    [SerializeField] private bool visualizeInteractionChecksInGame = true;
-    [SerializeField] private float interactionDebugLineWidth = 0.015f;
+    [SerializeField] private bool visualizeInteractionChecks = false;
 
     private CharacterController _controller;
     private InputSystem_Actions _actions;
@@ -115,9 +113,6 @@ public class PlayerController : MonoBehaviour
     private Vector3 _lastInteractionOrigin;
     private Vector3 _lastInteractionDirection;
     private bool _hasInteractionDebugPose;
-    private LineRenderer _interactionDebugRay;
-    private LineRenderer _interactionDebugFocusLine;
-    private LineRenderer[] _interactionDebugRings;
     private readonly RaycastHit[] _cameraCollisionHits = new RaycastHit[8];
     private readonly Collider[] _cameraOverlapHits = new Collider[16];
     private readonly RaycastHit[] _interactionHits = new RaycastHit[16];
@@ -199,7 +194,6 @@ public class PlayerController : MonoBehaviour
         {
             interactionCursor.SetCanInteract(false);
         }
-        SetRuntimeInteractionDebugVisible(false);
         UnlockCursor();
     }
 
@@ -553,139 +547,6 @@ public class PlayerController : MonoBehaviour
             Debug.DrawLine(start, bounds.center, Color.green);
         }
 
-        DrawRuntimeInteractionDebug(start, end, directCastColor, aimColor);
-    }
-
-    private void DrawRuntimeInteractionDebug(Vector3 start, Vector3 end, Color directCastColor, Color aimColor)
-    {
-        if (!Application.isPlaying || !visualizeInteractionChecksInGame)
-        {
-            SetRuntimeInteractionDebugVisible(false);
-            return;
-        }
-
-        EnsureRuntimeInteractionDebug();
-        SetRuntimeInteractionDebugVisible(true);
-
-        _interactionDebugRay.startColor = directCastColor;
-        _interactionDebugRay.endColor = directCastColor;
-        _interactionDebugRay.startWidth = interactionDebugLineWidth;
-        _interactionDebugRay.endWidth = interactionDebugLineWidth;
-        _interactionDebugRay.SetPosition(0, start);
-        _interactionDebugRay.SetPosition(1, end);
-
-        Vector3 direction = (end - start).normalized;
-        if (direction.sqrMagnitude < 0.0001f)
-        {
-            direction = transform.forward;
-        }
-
-        for (int i = 0; i < _interactionDebugRings.Length; i++)
-        {
-            float t = i / (float)(_interactionDebugRings.Length - 1);
-            DrawRuntimeRing(_interactionDebugRings[i], Vector3.Lerp(start, end, t), direction, interactionAimRadius, aimColor);
-        }
-
-        if (_focusedInteractableCollider != null)
-        {
-            _interactionDebugFocusLine.enabled = true;
-            _interactionDebugFocusLine.startColor = Color.green;
-            _interactionDebugFocusLine.endColor = Color.green;
-            _interactionDebugFocusLine.startWidth = interactionDebugLineWidth * 1.5f;
-            _interactionDebugFocusLine.endWidth = interactionDebugLineWidth * 1.5f;
-            _interactionDebugFocusLine.SetPosition(0, start);
-            _interactionDebugFocusLine.SetPosition(1, _focusedInteractableCollider.bounds.center);
-        }
-        else
-        {
-            _interactionDebugFocusLine.enabled = false;
-        }
-    }
-
-    private void EnsureRuntimeInteractionDebug()
-    {
-        if (_interactionDebugRay != null)
-        {
-            return;
-        }
-
-        _interactionDebugRay = CreateInteractionDebugLine("Interaction Debug Ray", false, 2);
-        _interactionDebugFocusLine = CreateInteractionDebugLine("Interaction Debug Focus", false, 2);
-        _interactionDebugRings = new LineRenderer[4];
-        for (int i = 0; i < _interactionDebugRings.Length; i++)
-        {
-            _interactionDebugRings[i] = CreateInteractionDebugLine($"Interaction Debug Aim Ring {i + 1}", true, 33);
-        }
-    }
-
-    private LineRenderer CreateInteractionDebugLine(string objectName, bool loop, int positionCount)
-    {
-        GameObject debugObject = new GameObject(objectName);
-        debugObject.transform.SetParent(transform, false);
-        debugObject.hideFlags = HideFlags.DontSave;
-
-        LineRenderer lineRenderer = debugObject.AddComponent<LineRenderer>();
-        lineRenderer.useWorldSpace = true;
-        lineRenderer.loop = loop;
-        lineRenderer.positionCount = positionCount;
-        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        lineRenderer.receiveShadows = false;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.enabled = false;
-        return lineRenderer;
-    }
-
-    private void DrawRuntimeRing(LineRenderer ring, Vector3 center, Vector3 forward, float radius, Color color)
-    {
-        const int segments = 32;
-        Vector3 right = Vector3.Cross(Vector3.up, forward);
-        if (right.sqrMagnitude < 0.0001f)
-        {
-            right = Vector3.Cross(Vector3.right, forward);
-        }
-
-        right.Normalize();
-        Vector3 up = Vector3.Cross(forward, right).normalized;
-
-        ring.enabled = true;
-        ring.startColor = color;
-        ring.endColor = color;
-        ring.startWidth = interactionDebugLineWidth;
-        ring.endWidth = interactionDebugLineWidth;
-        ring.positionCount = segments + 1;
-
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = Mathf.PI * 2f * i / segments;
-            Vector3 point = center + (right * Mathf.Cos(angle) + up * Mathf.Sin(angle)) * radius;
-            ring.SetPosition(i, point);
-        }
-    }
-
-    private void SetRuntimeInteractionDebugVisible(bool visible)
-    {
-        if (_interactionDebugRay != null)
-        {
-            _interactionDebugRay.enabled = visible;
-        }
-
-        if (_interactionDebugFocusLine != null)
-        {
-            _interactionDebugFocusLine.enabled = visible && _focusedInteractableCollider != null;
-        }
-
-        if (_interactionDebugRings == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < _interactionDebugRings.Length; i++)
-        {
-            if (_interactionDebugRings[i] != null)
-            {
-                _interactionDebugRings[i].enabled = visible;
-            }
-        }
     }
 
     private static void DebugDrawWireSphere(Vector3 center, float radius, Color color)
@@ -1190,6 +1051,5 @@ public class PlayerController : MonoBehaviour
         interactionDistance = Mathf.Max(0f, interactionDistance);
         interactionRadius = Mathf.Max(0f, interactionRadius);
         interactionAimRadius = Mathf.Max(interactionRadius, interactionAimRadius);
-        interactionDebugLineWidth = Mathf.Max(0.001f, interactionDebugLineWidth);
     }
 }
