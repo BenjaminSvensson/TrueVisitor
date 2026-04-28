@@ -74,6 +74,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string interactionLayerName = "Interact";
     [SerializeField] private bool includeTriggerInteractables = true;
     [SerializeField] private InteractionCursor interactionCursor;
+    [SerializeField] private bool visualizeInteractionChecks = true;
+    [SerializeField] private bool visualizeInteractionChecksInGame = true;
+    [SerializeField] private float interactionDebugLineWidth = 0.015f;
 
     private CharacterController _controller;
     private InputSystem_Actions _actions;
@@ -108,6 +111,13 @@ public class PlayerController : MonoBehaviour
     private float _landingRotationImpulse;
     private int _interactionLayerMask;
     private IInteractable _focusedInteractable;
+    private Collider _focusedInteractableCollider;
+    private Vector3 _lastInteractionOrigin;
+    private Vector3 _lastInteractionDirection;
+    private bool _hasInteractionDebugPose;
+    private LineRenderer _interactionDebugRay;
+    private LineRenderer _interactionDebugFocusLine;
+    private LineRenderer[] _interactionDebugRings;
     private readonly RaycastHit[] _cameraCollisionHits = new RaycastHit[8];
     private readonly Collider[] _cameraOverlapHits = new Collider[16];
     private readonly RaycastHit[] _interactionHits = new RaycastHit[16];
@@ -189,6 +199,7 @@ public class PlayerController : MonoBehaviour
         {
             interactionCursor.SetCanInteract(false);
         }
+        SetRuntimeInteractionDebugVisible(false);
         UnlockCursor();
     }
 
@@ -200,12 +211,13 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         ReadInput();
-        UpdateInteractionFocus();
-        HandleInteraction();
         HandleLook(Time.deltaTime);
         HandleMovement(Time.deltaTime);
         HandleZoom(Time.deltaTime);
         HandleCameraMotion(Time.deltaTime);
+        UpdateInteractionFocus();
+        DrawInteractionDebug();
+        HandleInteraction();
     }
 
     public void TeleportToCameraPose(Transform cameraPose)
@@ -422,17 +434,24 @@ public class PlayerController : MonoBehaviour
 
     private IInteractable FindBestInteractable()
     {
-        if (playerCamera == null)
+        Transform cameraTransform = GetInteractionCameraTransform();
+        if (cameraTransform == null)
         {
+            _focusedInteractableCollider = null;
+            _hasInteractionDebugPose = false;
             return null;
         }
 
-        Transform cameraTransform = playerCamera.transform;
         Vector3 origin = cameraTransform.position;
         Vector3 direction = cameraTransform.forward;
+        _lastInteractionOrigin = origin;
+        _lastInteractionDirection = direction;
+        _hasInteractionDebugPose = true;
+
         int interactionMask = GetInteractionMask();
         if (interactionMask == 0)
         {
+            _focusedInteractableCollider = null;
             return null;
         }
 
@@ -451,6 +470,7 @@ public class PlayerController : MonoBehaviour
         );
 
         IInteractable bestInteractable = null;
+        Collider bestCollider = null;
         float bestScore = float.MaxValue;
 
         for (int i = 0; i < hitCount; i++)
@@ -471,6 +491,7 @@ public class PlayerController : MonoBehaviour
             {
                 bestScore = hit.distance;
                 bestInteractable = interactable;
+                bestCollider = hit.collider;
             }
         }
 
@@ -494,10 +515,306 @@ public class PlayerController : MonoBehaviour
             {
                 bestScore = score;
                 bestInteractable = interactable;
+                bestCollider = candidate;
             }
         }
 
+        _focusedInteractableCollider = bestCollider;
         return bestInteractable;
+    }
+
+    private void DrawInteractionDebug()
+    {
+        if (!visualizeInteractionChecks || !_hasInteractionDebugPose)
+        {
+            return;
+        }
+
+        Vector3 start = _lastInteractionOrigin;
+        Vector3 end = start + _lastInteractionDirection * interactionDistance;
+        Color directCastColor = _focusedInteractable != null ? Color.green : Color.yellow;
+        Color aimColor = _focusedInteractable != null ? Color.cyan : new Color(0.25f, 0.7f, 1f, 1f);
+
+        Debug.DrawLine(start, end, directCastColor);
+        DebugDrawWireSphere(start, interactionRadius, directCastColor);
+        DebugDrawWireSphere(end, interactionRadius, directCastColor);
+
+        int stepCount = Mathf.Max(2, Mathf.CeilToInt(interactionDistance / 0.5f));
+        for (int i = 0; i <= stepCount; i++)
+        {
+            float t = i / (float)stepCount;
+            DebugDrawWireSphere(Vector3.Lerp(start, end, t), interactionAimRadius, aimColor);
+        }
+
+        if (_focusedInteractableCollider != null)
+        {
+            Bounds bounds = _focusedInteractableCollider.bounds;
+            DebugDrawBounds(bounds, Color.green);
+            Debug.DrawLine(start, bounds.center, Color.green);
+        }
+
+        DrawRuntimeInteractionDebug(start, end, directCastColor, aimColor);
+    }
+
+    private void DrawRuntimeInteractionDebug(Vector3 start, Vector3 end, Color directCastColor, Color aimColor)
+    {
+        if (!Application.isPlaying || !visualizeInteractionChecksInGame)
+        {
+            SetRuntimeInteractionDebugVisible(false);
+            return;
+        }
+
+        EnsureRuntimeInteractionDebug();
+        SetRuntimeInteractionDebugVisible(true);
+
+        _interactionDebugRay.startColor = directCastColor;
+        _interactionDebugRay.endColor = directCastColor;
+        _interactionDebugRay.startWidth = interactionDebugLineWidth;
+        _interactionDebugRay.endWidth = interactionDebugLineWidth;
+        _interactionDebugRay.SetPosition(0, start);
+        _interactionDebugRay.SetPosition(1, end);
+
+        Vector3 direction = (end - start).normalized;
+        if (direction.sqrMagnitude < 0.0001f)
+        {
+            direction = transform.forward;
+        }
+
+        for (int i = 0; i < _interactionDebugRings.Length; i++)
+        {
+            float t = i / (float)(_interactionDebugRings.Length - 1);
+            DrawRuntimeRing(_interactionDebugRings[i], Vector3.Lerp(start, end, t), direction, interactionAimRadius, aimColor);
+        }
+
+        if (_focusedInteractableCollider != null)
+        {
+            _interactionDebugFocusLine.enabled = true;
+            _interactionDebugFocusLine.startColor = Color.green;
+            _interactionDebugFocusLine.endColor = Color.green;
+            _interactionDebugFocusLine.startWidth = interactionDebugLineWidth * 1.5f;
+            _interactionDebugFocusLine.endWidth = interactionDebugLineWidth * 1.5f;
+            _interactionDebugFocusLine.SetPosition(0, start);
+            _interactionDebugFocusLine.SetPosition(1, _focusedInteractableCollider.bounds.center);
+        }
+        else
+        {
+            _interactionDebugFocusLine.enabled = false;
+        }
+    }
+
+    private void EnsureRuntimeInteractionDebug()
+    {
+        if (_interactionDebugRay != null)
+        {
+            return;
+        }
+
+        _interactionDebugRay = CreateInteractionDebugLine("Interaction Debug Ray", false, 2);
+        _interactionDebugFocusLine = CreateInteractionDebugLine("Interaction Debug Focus", false, 2);
+        _interactionDebugRings = new LineRenderer[4];
+        for (int i = 0; i < _interactionDebugRings.Length; i++)
+        {
+            _interactionDebugRings[i] = CreateInteractionDebugLine($"Interaction Debug Aim Ring {i + 1}", true, 33);
+        }
+    }
+
+    private LineRenderer CreateInteractionDebugLine(string objectName, bool loop, int positionCount)
+    {
+        GameObject debugObject = new GameObject(objectName);
+        debugObject.transform.SetParent(transform, false);
+        debugObject.hideFlags = HideFlags.DontSave;
+
+        LineRenderer lineRenderer = debugObject.AddComponent<LineRenderer>();
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.loop = loop;
+        lineRenderer.positionCount = positionCount;
+        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lineRenderer.receiveShadows = false;
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.enabled = false;
+        return lineRenderer;
+    }
+
+    private void DrawRuntimeRing(LineRenderer ring, Vector3 center, Vector3 forward, float radius, Color color)
+    {
+        const int segments = 32;
+        Vector3 right = Vector3.Cross(Vector3.up, forward);
+        if (right.sqrMagnitude < 0.0001f)
+        {
+            right = Vector3.Cross(Vector3.right, forward);
+        }
+
+        right.Normalize();
+        Vector3 up = Vector3.Cross(forward, right).normalized;
+
+        ring.enabled = true;
+        ring.startColor = color;
+        ring.endColor = color;
+        ring.startWidth = interactionDebugLineWidth;
+        ring.endWidth = interactionDebugLineWidth;
+        ring.positionCount = segments + 1;
+
+        for (int i = 0; i <= segments; i++)
+        {
+            float angle = Mathf.PI * 2f * i / segments;
+            Vector3 point = center + (right * Mathf.Cos(angle) + up * Mathf.Sin(angle)) * radius;
+            ring.SetPosition(i, point);
+        }
+    }
+
+    private void SetRuntimeInteractionDebugVisible(bool visible)
+    {
+        if (_interactionDebugRay != null)
+        {
+            _interactionDebugRay.enabled = visible;
+        }
+
+        if (_interactionDebugFocusLine != null)
+        {
+            _interactionDebugFocusLine.enabled = visible && _focusedInteractableCollider != null;
+        }
+
+        if (_interactionDebugRings == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _interactionDebugRings.Length; i++)
+        {
+            if (_interactionDebugRings[i] != null)
+            {
+                _interactionDebugRings[i].enabled = visible;
+            }
+        }
+    }
+
+    private static void DebugDrawWireSphere(Vector3 center, float radius, Color color)
+    {
+        const int segments = 24;
+        float step = Mathf.PI * 2f / segments;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float a = i * step;
+            float b = (i + 1) * step;
+
+            Debug.DrawLine(
+                center + new Vector3(Mathf.Cos(a) * radius, Mathf.Sin(a) * radius, 0f),
+                center + new Vector3(Mathf.Cos(b) * radius, Mathf.Sin(b) * radius, 0f),
+                color
+            );
+            Debug.DrawLine(
+                center + new Vector3(Mathf.Cos(a) * radius, 0f, Mathf.Sin(a) * radius),
+                center + new Vector3(Mathf.Cos(b) * radius, 0f, Mathf.Sin(b) * radius),
+                color
+            );
+            Debug.DrawLine(
+                center + new Vector3(0f, Mathf.Cos(a) * radius, Mathf.Sin(a) * radius),
+                center + new Vector3(0f, Mathf.Cos(b) * radius, Mathf.Sin(b) * radius),
+                color
+            );
+        }
+    }
+
+    private static void DebugDrawBounds(Bounds bounds, Color color)
+    {
+        Vector3 min = bounds.min;
+        Vector3 max = bounds.max;
+
+        Vector3 a = new Vector3(min.x, min.y, min.z);
+        Vector3 b = new Vector3(max.x, min.y, min.z);
+        Vector3 c = new Vector3(max.x, min.y, max.z);
+        Vector3 d = new Vector3(min.x, min.y, max.z);
+        Vector3 e = new Vector3(min.x, max.y, min.z);
+        Vector3 f = new Vector3(max.x, max.y, min.z);
+        Vector3 g = new Vector3(max.x, max.y, max.z);
+        Vector3 h = new Vector3(min.x, max.y, max.z);
+
+        Debug.DrawLine(a, b, color);
+        Debug.DrawLine(b, c, color);
+        Debug.DrawLine(c, d, color);
+        Debug.DrawLine(d, a, color);
+        Debug.DrawLine(e, f, color);
+        Debug.DrawLine(f, g, color);
+        Debug.DrawLine(g, h, color);
+        Debug.DrawLine(h, e, color);
+        Debug.DrawLine(a, e, color);
+        Debug.DrawLine(b, f, color);
+        Debug.DrawLine(c, g, color);
+        Debug.DrawLine(d, h, color);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!visualizeInteractionChecks)
+        {
+            return;
+        }
+
+        Transform debugCameraTransform = GetInteractionCameraTransform();
+        if (debugCameraTransform == null)
+        {
+            return;
+        }
+
+        Vector3 start = Application.isPlaying && _hasInteractionDebugPose
+            ? _lastInteractionOrigin
+            : debugCameraTransform.position;
+        Vector3 direction = Application.isPlaying && _hasInteractionDebugPose
+            ? _lastInteractionDirection
+            : debugCameraTransform.forward;
+        Vector3 end = start + direction * interactionDistance;
+
+        Gizmos.color = _focusedInteractable != null ? Color.green : Color.yellow;
+        Gizmos.DrawLine(start, end);
+        Gizmos.DrawWireSphere(start, interactionRadius);
+        Gizmos.DrawWireSphere(end, interactionRadius);
+
+        Gizmos.color = Color.cyan;
+        int stepCount = Mathf.Max(2, Mathf.CeilToInt(interactionDistance / 0.5f));
+        for (int i = 0; i <= stepCount; i++)
+        {
+            float t = i / (float)stepCount;
+            Gizmos.DrawWireSphere(Vector3.Lerp(start, end, t), interactionAimRadius);
+        }
+
+        if (_focusedInteractableCollider != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(_focusedInteractableCollider.bounds.center, _focusedInteractableCollider.bounds.size);
+        }
+    }
+
+    private Transform GetInteractionCameraTransform()
+    {
+        if (playerCamera != null && playerCamera.isActiveAndEnabled)
+        {
+            return playerCamera.transform;
+        }
+
+        Camera[] childCameras = GetComponentsInChildren<Camera>(false);
+        for (int i = 0; i < childCameras.Length; i++)
+        {
+            Camera childCamera = childCameras[i];
+            if (childCamera != null && childCamera.isActiveAndEnabled)
+            {
+                playerCamera = childCamera;
+                return childCamera.transform;
+            }
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null && mainCamera.isActiveAndEnabled)
+        {
+            return mainCamera.transform;
+        }
+
+        if (playerCamera != null)
+        {
+            return playerCamera.transform;
+        }
+
+        return cameraPivot != null ? cameraPivot : transform;
     }
 
     private bool TryGetInteractionCandidate(
@@ -873,5 +1190,6 @@ public class PlayerController : MonoBehaviour
         interactionDistance = Mathf.Max(0f, interactionDistance);
         interactionRadius = Mathf.Max(0f, interactionRadius);
         interactionAimRadius = Mathf.Max(interactionRadius, interactionAimRadius);
+        interactionDebugLineWidth = Mathf.Max(0.001f, interactionDebugLineWidth);
     }
 }
