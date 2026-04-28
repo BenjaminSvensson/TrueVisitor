@@ -9,6 +9,8 @@ public class CutsceneEvents : MonoBehaviour
     [SerializeField] private Quaternion playerUpstairsRotation;
     [SerializeField] private Animator cutsceneAnimator;
 
+    private bool ignoreCloseInputThisFrame;
+
     private void Start()
     {
         if (diaryUI != null)
@@ -20,6 +22,7 @@ public class CutsceneEvents : MonoBehaviour
             return;
 
         diaryUI.SetActive(true);
+        ignoreCloseInputThisFrame = true;
     }
 
     public void CloseDiary()
@@ -39,6 +42,12 @@ public class CutsceneEvents : MonoBehaviour
     {
         if (diaryUI == null)
             return;
+
+        if (ignoreCloseInputThisFrame)
+        {
+            ignoreCloseInputThisFrame = false;
+            return;
+        }
 
         if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame && diaryUI.activeSelf)
         {
