@@ -36,6 +36,8 @@ public class PlayerInventory : MonoBehaviour
 
     public int Coins => coins;
     public IReadOnlyList<InventoryItemStack> Items => items;
+    public UnityEvent<int> OnCoinsChanged => onCoinsChanged;
+    public UnityEvent<string> OnItemAdded => onItemAdded;
 
     public bool CanAfford(int price)
     {
