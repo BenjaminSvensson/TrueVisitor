@@ -74,6 +74,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string interactionLayerName = "Interact";
     [SerializeField] private bool includeTriggerInteractables = true;
     [SerializeField] private InteractionCursor interactionCursor;
+    [SerializeField] private PlayerBeartrapPlacer selectedItemPlacer;
     [SerializeField] private bool visualizeInteractionChecks = false;
 
     private CharacterController _controller;
@@ -167,6 +168,11 @@ public class PlayerController : MonoBehaviour
         if (interactionCursor == null)
         {
             interactionCursor = InteractionCursor.FindOrAttachToCenteredCursor();
+        }
+
+        if (selectedItemPlacer == null)
+        {
+            selectedItemPlacer = GetComponent<PlayerBeartrapPlacer>();
         }
 
         ResolveInteractionLayerMask();
@@ -466,7 +472,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        _focusedInteractable?.Interact();
+        if (_focusedInteractable != null)
+        {
+            _focusedInteractable.Interact();
+            return;
+        }
+
+        selectedItemPlacer?.TryPlaceSelectedItem();
     }
 
     private void UpdateInteractionFocus()

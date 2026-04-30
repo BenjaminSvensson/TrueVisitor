@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BeartrapTrap : MonoBehaviour
+public class BeartrapTrap : MonoBehaviour, IInteractable
 {
     [SerializeField] private Transform openVisual;
     [SerializeField] private Transform closedVisual;
@@ -9,15 +9,23 @@ public class BeartrapTrap : MonoBehaviour
     [SerializeField] private Vector3 triggerCenter = new Vector3(0f, 0.18f, 0f);
     [SerializeField] private Vector3 triggerSize = new Vector3(1.2f, 0.35f, 1.2f);
     [SerializeField] private float trapDuration = 3f;
+    [SerializeField] private string pickupItemId = "beartrap";
+    [SerializeField] private string pickupDisplayName = "Beartrap";
+    [SerializeField] private int pickupQuantity = 1;
+    [SerializeField] private string pickupLayerName = "Interact";
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip snapClip;
 
     private static AudioClip generatedSnapClip;
     private BoxCollider triggerCollider;
     private bool triggered;
+    private int defaultLayer;
+    private int pickupLayer = -1;
 
     private void Awake()
     {
+        defaultLayer = gameObject.layer;
+        ResolvePickupLayer();
         ResolveVisuals();
         EnsureTriggerCollider();
         EnsureAudioSource();
@@ -28,6 +36,7 @@ public class BeartrapTrap : MonoBehaviour
     {
         triggered = false;
         SetVisualState(true);
+        SetPickupInteractable(false);
 
         if (triggerCollider != null)
         {
@@ -55,14 +64,28 @@ public class BeartrapTrap : MonoBehaviour
     {
         triggered = true;
         SetVisualState(false);
-
-        if (triggerCollider != null)
-        {
-            triggerCollider.enabled = false;
-        }
+        SetPickupInteractable(true);
 
         player.LockMovementForSeconds(trapDuration);
         PlaySnapSound();
+    }
+
+    public void Interact()
+    {
+        if (!triggered)
+        {
+            return;
+        }
+
+        PlayerInventory inventory = FindAnyObjectByType<PlayerInventory>();
+        if (inventory == null)
+        {
+            Debug.LogWarning($"{nameof(BeartrapTrap)} could not find a {nameof(PlayerInventory)} for pickup.", this);
+            return;
+        }
+
+        inventory.AddItem(pickupItemId, pickupDisplayName, pickupQuantity);
+        Destroy(gameObject);
     }
 
     private void ResolveVisuals()
@@ -107,6 +130,36 @@ public class BeartrapTrap : MonoBehaviour
         triggerCollider.isTrigger = true;
         triggerCollider.center = triggerCenter;
         triggerCollider.size = triggerSize;
+    }
+
+    private void SetPickupInteractable(bool canPickup)
+    {
+        int targetLayer = canPickup && pickupLayer >= 0 ? pickupLayer : defaultLayer;
+        SetLayerRecursively(transform, targetLayer);
+
+        if (triggerCollider != null)
+        {
+            triggerCollider.enabled = true;
+            triggerCollider.isTrigger = true;
+        }
+    }
+
+    private void SetLayerRecursively(Transform target, int layer)
+    {
+        target.gameObject.layer = layer;
+        for (int i = 0; i < target.childCount; i++)
+        {
+            SetLayerRecursively(target.GetChild(i), layer);
+        }
+    }
+
+    private void ResolvePickupLayer()
+    {
+        pickupLayer = LayerMask.NameToLayer(pickupLayerName);
+        if (pickupLayer < 0)
+        {
+            Debug.LogWarning($"{nameof(BeartrapTrap)} could not find a pickup layer named '{pickupLayerName}'.", this);
+        }
     }
 
     private void EnsureAudioSource()
@@ -169,6 +222,7 @@ public class BeartrapTrap : MonoBehaviour
         triggerSize.y = Mathf.Max(0.1f, triggerSize.y);
         triggerSize.z = Mathf.Max(0.1f, triggerSize.z);
         trapDuration = Mathf.Max(0f, trapDuration);
+        pickupQuantity = Mathf.Max(1, pickupQuantity);
 
         if (string.IsNullOrWhiteSpace(openVisualName))
         {
@@ -178,6 +232,21 @@ public class BeartrapTrap : MonoBehaviour
         if (string.IsNullOrWhiteSpace(closedVisualName))
         {
             closedVisualName = "BearTrapClosed";
+        }
+
+        if (string.IsNullOrWhiteSpace(pickupItemId))
+        {
+            pickupItemId = "beartrap";
+        }
+
+        if (string.IsNullOrWhiteSpace(pickupDisplayName))
+        {
+            pickupDisplayName = pickupItemId;
+        }
+
+        if (string.IsNullOrWhiteSpace(pickupLayerName))
+        {
+            pickupLayerName = "Interact";
         }
     }
 }

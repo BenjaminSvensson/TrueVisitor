@@ -42,15 +42,20 @@ public class PlayerInventory : MonoBehaviour
 {
     [SerializeField] private int coins = 10;
     [SerializeField] private List<InventoryItemStack> items = new List<InventoryItemStack>();
-    [SerializeField] private UnityEvent<int> onCoinsChanged;
-    [SerializeField] private UnityEvent<string> onItemAdded;
-    [SerializeField] private UnityEvent<string> onItemRemoved;
+    [SerializeField] private string selectedItemId;
+    [SerializeField] private UnityEvent<int> onCoinsChanged = new UnityEvent<int>();
+    [SerializeField] private UnityEvent<string> onItemAdded = new UnityEvent<string>();
+    [SerializeField] private UnityEvent<string> onItemRemoved = new UnityEvent<string>();
+    [SerializeField] private UnityEvent<string> onSelectedItemChanged = new UnityEvent<string>();
 
     public int Coins => coins;
     public IReadOnlyList<InventoryItemStack> Items => items;
+    public string SelectedItemId => selectedItemId;
+    public InventoryItemStack SelectedItem => FindItem(selectedItemId);
     public UnityEvent<int> OnCoinsChanged => onCoinsChanged;
     public UnityEvent<string> OnItemAdded => onItemAdded;
     public UnityEvent<string> OnItemRemoved => onItemRemoved;
+    public UnityEvent<string> OnSelectedItemChanged => onSelectedItemChanged;
 
     public bool CanAfford(int price)
     {
@@ -124,6 +129,10 @@ public class PlayerInventory : MonoBehaviour
             if (item.Quantity <= 0)
             {
                 items.RemoveAt(i);
+                if (selectedItemId == itemId)
+                {
+                    SetSelectedItem(null);
+                }
             }
 
             onItemRemoved?.Invoke(itemId);
@@ -142,6 +151,49 @@ public class PlayerInventory : MonoBehaviour
     {
         InventoryItemStack item = FindItem(itemId);
         return item != null ? item.Quantity : 0;
+    }
+
+    public bool IsSelected(string itemId)
+    {
+        return !string.IsNullOrWhiteSpace(itemId) && selectedItemId == itemId;
+    }
+
+    public bool TrySelectItem(string itemId)
+    {
+        if (string.IsNullOrWhiteSpace(itemId) || GetQuantity(itemId) <= 0)
+        {
+            return false;
+        }
+
+        SetSelectedItem(itemId);
+        return true;
+    }
+
+    public void ToggleSelectedItem(string itemId)
+    {
+        if (IsSelected(itemId))
+        {
+            SetSelectedItem(null);
+            return;
+        }
+
+        TrySelectItem(itemId);
+    }
+
+    public void ClearSelectedItem()
+    {
+        SetSelectedItem(null);
+    }
+
+    private void SetSelectedItem(string itemId)
+    {
+        if (selectedItemId == itemId)
+        {
+            return;
+        }
+
+        selectedItemId = itemId;
+        onSelectedItemChanged?.Invoke(selectedItemId);
     }
 
     private InventoryItemStack FindItem(string itemId)
@@ -168,6 +220,11 @@ public class PlayerInventory : MonoBehaviour
             {
                 items.RemoveAt(i);
             }
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedItemId) && GetQuantity(selectedItemId) <= 0)
+        {
+            selectedItemId = null;
         }
     }
 }

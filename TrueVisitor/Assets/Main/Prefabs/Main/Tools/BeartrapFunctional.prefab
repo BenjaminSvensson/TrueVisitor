@@ -53,6 +53,10 @@ MonoBehaviour:
   triggerCenter: {x: 0, y: 0.18, z: 0}
   triggerSize: {x: 1.2, y: 0.35, z: 1.2}
   trapDuration: 3
+  pickupItemId: beartrap
+  pickupDisplayName: Beartrap
+  pickupQuantity: 1
+  pickupLayerName: Interact
   audioSource: {fileID: 0}
   snapClip: {fileID: 0}
 --- !u!1001 &707430874087775464
