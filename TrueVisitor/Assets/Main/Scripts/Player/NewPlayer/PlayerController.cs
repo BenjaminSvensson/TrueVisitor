@@ -107,6 +107,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 _baseCameraLocalPosition;
     private float _landingPositionImpulse;
     private float _landingRotationImpulse;
+    private float _movementLockTimer;
     private int _interactionLayerMask;
     private IInteractable _focusedInteractable;
     private Collider _focusedInteractableCollider;
@@ -204,6 +205,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        TickMovementLock(Time.deltaTime);
         ReadInput();
         HandleLook(Time.deltaTime);
         HandleMovement(Time.deltaTime);
@@ -212,6 +214,16 @@ public class PlayerController : MonoBehaviour
         UpdateInteractionFocus();
         DrawInteractionDebug();
         HandleInteraction();
+    }
+
+    public bool IsMovementLocked => _movementLockTimer > 0f;
+
+    public void LockMovementForSeconds(float duration)
+    {
+        _movementLockTimer = Mathf.Max(_movementLockTimer, duration);
+        _moveInput = Vector2.zero;
+        _horizontalVelocity = Vector3.zero;
+        _jumpBufferTimer = 0f;
     }
 
     public void TeleportToCameraPose(Transform cameraPose)
@@ -277,7 +289,7 @@ public class PlayerController : MonoBehaviour
 
     private void ReadInput()
     {
-        _moveInput = _actions.Player.Move.ReadValue<Vector2>();
+        _moveInput = IsMovementLocked ? Vector2.zero : _actions.Player.Move.ReadValue<Vector2>();
         _lookInput = _actions.Player.Look.ReadValue<Vector2>();
     }
 
@@ -297,6 +309,12 @@ public class PlayerController : MonoBehaviour
     {
         _wasGrounded = _isGrounded;
         _isGrounded = _controller.isGrounded;
+
+        if (IsMovementLocked)
+        {
+            HandleLockedMovement(deltaTime);
+            return;
+        }
 
         bool jumpPressed = _actions.Player.Jump.WasPressedThisFrame();
         bool runHeld = _actions.Player.Run.IsPressed();
@@ -380,6 +398,40 @@ public class PlayerController : MonoBehaviour
         _targetHeight = _isCrouching ? crouchingHeight : standingHeight;
         _targetCameraHeight = _isCrouching ? crouchingCameraHeight : standingCameraHeight;
 
+        _controller.height = Mathf.Lerp(_controller.height, _targetHeight, 1f - Mathf.Exp(-crouchTransitionSpeed * deltaTime));
+        _controller.center = new Vector3(0f, _controller.height * 0.5f, 0f);
+    }
+
+    private void TickMovementLock(float deltaTime)
+    {
+        if (_movementLockTimer <= 0f)
+        {
+            return;
+        }
+
+        _movementLockTimer = Mathf.Max(0f, _movementLockTimer - deltaTime);
+    }
+
+    private void HandleLockedMovement(float deltaTime)
+    {
+        _horizontalVelocity = Vector3.zero;
+        _jumpBufferTimer = 0f;
+
+        if (_isGrounded)
+        {
+            _coyoteTimer = coyoteTime;
+            _verticalVelocity = groundedStickForce;
+        }
+        else
+        {
+            _coyoteTimer = 0f;
+            _verticalVelocity += gravity * deltaTime;
+        }
+
+        _controller.Move(Vector3.up * _verticalVelocity * deltaTime);
+
+        _targetHeight = _isCrouching ? crouchingHeight : standingHeight;
+        _targetCameraHeight = _isCrouching ? crouchingCameraHeight : standingCameraHeight;
         _controller.height = Mathf.Lerp(_controller.height, _targetHeight, 1f - Mathf.Exp(-crouchTransitionSpeed * deltaTime));
         _controller.center = new Vector3(0f, _controller.height * 0.5f, 0f);
     }

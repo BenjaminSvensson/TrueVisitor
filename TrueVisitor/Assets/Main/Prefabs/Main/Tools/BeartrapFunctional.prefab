@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3820789724941786823}
+  - component: {fileID: 5441090574547759001}
   m_Layer: 0
   m_Name: BeartrapFunctional
   m_TagString: Untagged
@@ -33,6 +34,27 @@ Transform:
   - {fileID: 1034690867867695875}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5441090574547759001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6201836435286584396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b50bbdbebf04ebc9ade8243a4c72924, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BeartrapTrap
+  openVisual: {fileID: 0}
+  closedVisual: {fileID: 0}
+  openVisualName: BearTrapOpen
+  closedVisualName: BearTrapClosed
+  triggerCenter: {x: 0, y: 0.18, z: 0}
+  triggerSize: {x: 1.2, y: 0.35, z: 1.2}
+  trapDuration: 3
+  audioSource: {fileID: 0}
+  snapClip: {fileID: 0}
 --- !u!1001 &707430874087775464
 PrefabInstance:
   m_ObjectHideFlags: 0

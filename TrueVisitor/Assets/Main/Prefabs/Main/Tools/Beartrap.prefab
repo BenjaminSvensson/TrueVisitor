@@ -9,7 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3820789724941786823}
-  m_Layer: 0
+  - component: {fileID: 5441090574547759004}
+  - component: {fileID: 5441090574547759005}
+  m_Layer: 7
   m_Name: Beartrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33,6 +35,56 @@ Transform:
   - {fileID: 1034690867867695875}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5441090574547759004
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6201836435286584396}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 0.35, z: 1.2}
+  m_Center: {x: 0, y: 0.18, z: 0}
+--- !u!114 &5441090574547759005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6201836435286584396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86525e6e4bbe4a4ea8fcdfc7f21075da, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BuyInteractable
+  playerInventory: {fileID: 0}
+  itemId: beartrap
+  displayName: Beartrap
+  price: 3
+  quantity: 1
+  addItemToInventory: 1
+  buyOnlyOnce: 0
+  disableAfterPurchase: 0
+  onPurchased:
+    m_PersistentCalls:
+      m_Calls: []
+  onCannotAfford:
+    m_PersistentCalls:
+      m_Calls: []
+  onAlreadyPurchased:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &707430874087775464
 PrefabInstance:
   m_ObjectHideFlags: 0

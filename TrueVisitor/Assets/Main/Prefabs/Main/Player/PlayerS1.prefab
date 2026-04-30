@@ -278,6 +278,7 @@ GameObject:
   - component: {fileID: 5117461082557447459}
   - component: {fileID: 6193772915263462031}
   - component: {fileID: 8157242938574620134}
+  - component: {fileID: 5162037478862345111}
   m_Layer: 0
   m_Name: PlayerS1
   m_TagString: Untagged
@@ -346,6 +347,9 @@ MonoBehaviour:
   onItemAdded:
     m_PersistentCalls:
       m_Calls: []
+  onItemRemoved:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &8157242938574620134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -364,6 +368,30 @@ MonoBehaviour:
   prefix: 'Coins: '
   anchoredPosition: {x: 24, y: -24}
   panelSize: {x: 170, y: 44}
+--- !u!114 &5162037478862345111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4424244880470922835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 397b9d95d8524b919e9418e20df9195e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBeartrapPlacer
+  inventory: {fileID: 6193772915263462031}
+  placementCamera: {fileID: 6318147633091540994}
+  beartrapPrefab: {fileID: 6201836435286584396, guid: 6dfc9a54a6d59eb4ba786316bba97dda, type: 3}
+  itemId: beartrap
+  placementDistance: 2.5
+  placementMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  placementYOffset: 0.02
+  groundProbeHeight: 1.5
+  groundProbeDistance: 4
+  deselectAfterPlace: 1
 --- !u!114 &3339452436550467597
 MonoBehaviour:
   m_ObjectHideFlags: 0

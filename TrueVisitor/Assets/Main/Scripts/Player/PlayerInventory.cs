@@ -25,6 +25,17 @@ public class InventoryItemStack
     {
         quantity = Mathf.Max(0, quantity + amount);
     }
+
+    public bool Remove(int amount)
+    {
+        if (amount <= 0 || quantity < amount)
+        {
+            return false;
+        }
+
+        quantity -= amount;
+        return true;
+    }
 }
 
 public class PlayerInventory : MonoBehaviour
@@ -33,11 +44,13 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private List<InventoryItemStack> items = new List<InventoryItemStack>();
     [SerializeField] private UnityEvent<int> onCoinsChanged;
     [SerializeField] private UnityEvent<string> onItemAdded;
+    [SerializeField] private UnityEvent<string> onItemRemoved;
 
     public int Coins => coins;
     public IReadOnlyList<InventoryItemStack> Items => items;
     public UnityEvent<int> OnCoinsChanged => onCoinsChanged;
     public UnityEvent<string> OnItemAdded => onItemAdded;
+    public UnityEvent<string> OnItemRemoved => onItemRemoved;
 
     public bool CanAfford(int price)
     {
@@ -86,6 +99,38 @@ public class PlayerInventory : MonoBehaviour
         }
 
         onItemAdded?.Invoke(itemId);
+    }
+
+    public bool TryRemoveItem(string itemId, int quantity = 1)
+    {
+        if (string.IsNullOrWhiteSpace(itemId) || quantity <= 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            InventoryItemStack item = items[i];
+            if (item == null || item.ItemId != itemId)
+            {
+                continue;
+            }
+
+            if (!item.Remove(quantity))
+            {
+                return false;
+            }
+
+            if (item.Quantity <= 0)
+            {
+                items.RemoveAt(i);
+            }
+
+            onItemRemoved?.Invoke(itemId);
+            return true;
+        }
+
+        return false;
     }
 
     public bool HasItem(string itemId)
