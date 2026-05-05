@@ -931,7 +931,12 @@ MonoBehaviour:
   minimumSurfaceUpDot: 0.2
   groundProbeHeight: 1.5
   groundProbeDistance: 4
-  deselectAfterPlace: 1
+  deselectAfterPlace: 0
+  showPlacementPreview: 1
+  previewAlpha: 0.45
+  previewHideDelay: 0.12
+  previewTint: {r: 0.45, g: 0.75, b: 1, a: 0.45}
+  previewMaterial: {fileID: 0}
 --- !u!114 &3339452436550467597
 MonoBehaviour:
   m_ObjectHideFlags: 0

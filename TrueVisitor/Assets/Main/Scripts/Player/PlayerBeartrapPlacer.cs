@@ -14,9 +14,17 @@ public class PlayerBeartrapPlacer : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float minimumSurfaceUpDot = 0.2f;
     [SerializeField] private float groundProbeHeight = 1.5f;
     [SerializeField] private float groundProbeDistance = 4f;
-    [SerializeField] private bool deselectAfterPlace = true;
+    [SerializeField] private bool deselectAfterPlace = false;
+    [SerializeField] private bool showPlacementPreview = true;
+    [SerializeField, Range(0.05f, 1f)] private float previewAlpha = 0.45f;
+    [SerializeField] private float previewHideDelay = 0.12f;
+    [SerializeField] private Color previewTint = new Color(0.45f, 0.75f, 1f, 0.45f);
+    [SerializeField] private Material previewMaterial;
 
     private int resolvedPlacementMask;
+    private GameObject placementPreview;
+    private Material runtimePreviewMaterial;
+    private float lastValidPreviewTime = float.NegativeInfinity;
 
     private void Awake()
     {
@@ -39,21 +47,31 @@ public class PlayerBeartrapPlacer : MonoBehaviour
         {
             ToggleSelection();
         }
+        else if (WasUnassignedSlotPressed())
+        {
+            inventory?.ClearSelectedItem();
+            HidePlacementPreview();
+        }
 
         if (!IsSelected())
         {
+            HidePlacementPreview();
             return;
         }
 
         if (inventory == null || inventory.GetQuantity(itemId) <= 0)
         {
             inventory?.ClearSelectedItem();
+            HidePlacementPreview();
             return;
         }
+
+        UpdatePlacementPreview();
 
         if (WasCancelPressed())
         {
             inventory.ClearSelectedItem();
+            HidePlacementPreview();
             return;
         }
 
@@ -101,12 +119,40 @@ public class PlayerBeartrapPlacer : MonoBehaviour
             trap.InitializeOpen();
         }
 
-        if (deselectAfterPlace || inventory.GetQuantity(itemId) <= 0)
+        if (inventory.GetQuantity(itemId) <= 0)
         {
             inventory.ClearSelectedItem();
+            HidePlacementPreview();
+        }
+        else if (deselectAfterPlace)
+        {
+            inventory.ClearSelectedItem();
+            HidePlacementPreview();
+        }
+        else
+        {
+            UpdatePlacementPreview();
         }
 
         return true;
+    }
+
+    private void OnDisable()
+    {
+        HidePlacementPreview();
+    }
+
+    private void OnDestroy()
+    {
+        if (placementPreview != null)
+        {
+            Destroy(placementPreview);
+        }
+
+        if (runtimePreviewMaterial != null)
+        {
+            Destroy(runtimePreviewMaterial);
+        }
     }
 
     private bool IsSelected()
@@ -200,6 +246,205 @@ public class PlayerBeartrapPlacer : MonoBehaviour
         position = surfacePoint + surfaceNormal * placementYOffset;
         rotation = GetFlatPlacementRotation(forward, surfaceNormal);
         return true;
+    }
+
+    private void UpdatePlacementPreview()
+    {
+        if (!showPlacementPreview || beartrapPrefab == null)
+        {
+            HidePlacementPreview();
+            return;
+        }
+
+        if (!TryGetPlacementPose(out Vector3 position, out Quaternion rotation, out Vector3 surfacePoint, out Vector3 surfaceNormal))
+        {
+            HidePlacementPreviewAfterDelay();
+            return;
+        }
+
+        EnsurePlacementPreview();
+        if (placementPreview == null)
+        {
+            return;
+        }
+
+        Transform previewTransform = placementPreview.transform;
+        previewTransform.SetPositionAndRotation(position, rotation);
+        AlignPlacedTrapToSurface(previewTransform, surfacePoint, surfaceNormal);
+        lastValidPreviewTime = Time.time;
+
+        if (!placementPreview.activeSelf)
+        {
+            placementPreview.SetActive(true);
+        }
+    }
+
+    private void HidePlacementPreviewAfterDelay()
+    {
+        if (placementPreview != null
+            && placementPreview.activeSelf
+            && Time.time - lastValidPreviewTime <= previewHideDelay)
+        {
+            return;
+        }
+
+        HidePlacementPreview();
+    }
+
+    private void HidePlacementPreview()
+    {
+        if (placementPreview != null && placementPreview.activeSelf)
+        {
+            placementPreview.SetActive(false);
+        }
+
+        lastValidPreviewTime = float.NegativeInfinity;
+    }
+
+    private void EnsurePlacementPreview()
+    {
+        if (placementPreview != null)
+        {
+            return;
+        }
+
+        placementPreview = Instantiate(beartrapPrefab);
+        placementPreview.name = $"{beartrapPrefab.name} Preview";
+        ConfigurePreviewObject(placementPreview);
+        placementPreview.SetActive(false);
+    }
+
+    private void ConfigurePreviewObject(GameObject preview)
+    {
+        int previewLayer = LayerMask.NameToLayer("Ignore Raycast");
+        if (previewLayer < 0)
+        {
+            previewLayer = 2;
+        }
+
+        SetLayerRecursively(preview.transform, previewLayer);
+
+        Collider[] colliders = preview.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = false;
+        }
+
+        Rigidbody[] rigidbodies = preview.GetComponentsInChildren<Rigidbody>(true);
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            rigidbodies[i].isKinematic = true;
+            rigidbodies[i].detectCollisions = false;
+        }
+
+        AudioSource[] audioSources = preview.GetComponentsInChildren<AudioSource>(true);
+        for (int i = 0; i < audioSources.Length; i++)
+        {
+            audioSources[i].enabled = false;
+        }
+
+        MonoBehaviour[] behaviours = preview.GetComponentsInChildren<MonoBehaviour>(true);
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            behaviours[i].enabled = false;
+        }
+
+        Material material = GetPreviewMaterial();
+        Renderer[] renderers = preview.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer previewRenderer = renderers[i];
+            Material[] materials = previewRenderer.sharedMaterials;
+            for (int materialIndex = 0; materialIndex < materials.Length; materialIndex++)
+            {
+                materials[materialIndex] = material;
+            }
+
+            previewRenderer.sharedMaterials = materials;
+            previewRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            previewRenderer.receiveShadows = false;
+        }
+    }
+
+    private Material GetPreviewMaterial()
+    {
+        if (previewMaterial != null)
+        {
+            return previewMaterial;
+        }
+
+        if (runtimePreviewMaterial == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+            {
+                shader = Shader.Find("HDRP/Lit");
+            }
+
+            if (shader == null)
+            {
+                shader = Shader.Find("Standard");
+            }
+
+            runtimePreviewMaterial = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            runtimePreviewMaterial.name = "Runtime Beartrap Placement Preview";
+            ConfigureTransparentMaterial(runtimePreviewMaterial);
+        }
+
+        Color color = previewTint;
+        color.a = previewAlpha;
+        runtimePreviewMaterial.color = color;
+        return runtimePreviewMaterial;
+    }
+
+    private void ConfigureTransparentMaterial(Material material)
+    {
+        if (material == null)
+        {
+            return;
+        }
+
+        Color color = previewTint;
+        color.a = previewAlpha;
+        material.color = color;
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", color);
+        }
+
+        if (material.HasProperty("_Surface"))
+        {
+            material.SetFloat("_Surface", 1f);
+        }
+
+        if (material.HasProperty("_Blend"))
+        {
+            material.SetFloat("_Blend", 0f);
+        }
+
+        if (material.HasProperty("_ZWrite"))
+        {
+            material.SetFloat("_ZWrite", 0f);
+        }
+
+        material.SetOverrideTag("RenderType", "Transparent");
+        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        material.SetInt("_ZWrite", 0);
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.EnableKeyword("_ALPHABLEND_ON");
+        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+    }
+
+    private void SetLayerRecursively(Transform target, int layer)
+    {
+        target.gameObject.layer = layer;
+        for (int i = 0; i < target.childCount; i++)
+        {
+            SetLayerRecursively(target.GetChild(i), layer);
+        }
     }
 
     private void AlignPlacedTrapToSurface(Transform placedTrap, Vector3 surfacePoint, Vector3 surfaceNormal)
@@ -316,6 +561,34 @@ public class PlayerBeartrapPlacer : MonoBehaviour
             && (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame);
     }
 
+    private bool WasUnassignedSlotPressed()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            return false;
+        }
+
+        return keyboard.digit2Key.wasPressedThisFrame
+            || keyboard.digit3Key.wasPressedThisFrame
+            || keyboard.digit4Key.wasPressedThisFrame
+            || keyboard.digit5Key.wasPressedThisFrame
+            || keyboard.digit6Key.wasPressedThisFrame
+            || keyboard.digit7Key.wasPressedThisFrame
+            || keyboard.digit8Key.wasPressedThisFrame
+            || keyboard.digit9Key.wasPressedThisFrame
+            || keyboard.digit0Key.wasPressedThisFrame
+            || keyboard.numpad2Key.wasPressedThisFrame
+            || keyboard.numpad3Key.wasPressedThisFrame
+            || keyboard.numpad4Key.wasPressedThisFrame
+            || keyboard.numpad5Key.wasPressedThisFrame
+            || keyboard.numpad6Key.wasPressedThisFrame
+            || keyboard.numpad7Key.wasPressedThisFrame
+            || keyboard.numpad8Key.wasPressedThisFrame
+            || keyboard.numpad9Key.wasPressedThisFrame
+            || keyboard.numpad0Key.wasPressedThisFrame;
+    }
+
     private bool WasCancelPressed()
     {
         Keyboard keyboard = Keyboard.current;
@@ -330,6 +603,9 @@ public class PlayerBeartrapPlacer : MonoBehaviour
         minimumSurfaceUpDot = Mathf.Clamp01(minimumSurfaceUpDot);
         groundProbeHeight = Mathf.Max(0f, groundProbeHeight);
         groundProbeDistance = Mathf.Max(0.1f, groundProbeDistance);
+        previewAlpha = Mathf.Clamp(previewAlpha, 0.05f, 1f);
+        previewHideDelay = Mathf.Max(0f, previewHideDelay);
+        previewTint.a = previewAlpha;
 
         if (string.IsNullOrWhiteSpace(itemId))
         {
