@@ -7,6 +7,9 @@ public class DoorInteractable : MonoBehaviour, IInteractable
     [SerializeField] private float openAngle = 95f;
     [SerializeField] private float openSpeed = 8f;
     [SerializeField] private bool startsOpen = false;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip openClip;
+    [SerializeField] private AudioClip closeClip;
     [SerializeField] private UnityEvent onOpened;
     [SerializeField] private UnityEvent onClosed;
 
@@ -27,6 +30,7 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         openRotation = closedRotation * Quaternion.Euler(0f, openAngle, 0f);
         isOpen = startsOpen;
         doorPivot.localRotation = isOpen ? openRotation : closedRotation;
+        EnsureAudioSource();
     }
 
     private void Update()
@@ -71,12 +75,41 @@ public class DoorInteractable : MonoBehaviour, IInteractable
 
         if (isOpen)
         {
+            PlaySound(openClip);
             onOpened?.Invoke();
         }
         else
         {
+            PlaySound(closeClip);
             onClosed?.Invoke();
         }
+    }
+
+    private void EnsureAudioSource()
+    {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f;
+        audioSource.maxDistance = 12f;
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource == null || clip == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(clip);
     }
 
     private void OnValidate()

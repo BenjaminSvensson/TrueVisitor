@@ -160,6 +160,7 @@ NavMeshAgent:
   m_Radius: 0.5
   m_Speed: 3.5
   m_Acceleration: 8
+  avoidancePriority: 50
   m_AngularSpeed: 120
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
@@ -169,7 +170,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
-  m_AvoidancePriority: 50
 --- !u!114 &7033818131980214472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,11 +180,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d7d42de7a67548b5aa25c587c79b4ef8, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisitorAI
   player: {fileID: 0}
   searchPoints: []
   autoFindSearchPoints: 1
+  randomizeSearchPointOrder: 1
   sightRange: 16
   fieldOfView: 115
   eyeHeight: 1.6
@@ -196,9 +197,29 @@ MonoBehaviour:
   chaseSpeed: 4.2
   searchPointReachDistance: 1.2
   searchPointWaitTime: 1
+  navMeshSnapDistance: 4
+  fallbackRoamRadius: 8
+  fallbackRoamWaitTime: 1.5
+  playerContactResetDistance: 0.75
   doorCheckDistance: 1.4
   doorCheckRadius: 0.35
   doorCheckMask:
     serializedVersion: 2
     m_Bits: 4294967295
   doorOpenCooldown: 0.5
+  trapCheckRadius: 0.65
+  trapCheckVerticalTolerance: 1.2
+  trapCheckMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  footstepAudioSource: {fileID: 0}
+  footstepLoopClip: {fileID: 8300000, guid: 5e7f06f7e25f2ea45ad5ebbcc7fe0e7a, type: 3}
+  footstepVolume: 0.65
+  footstepMinDistance: 1.5
+  footstepMaxDistance: 18
+  footstepSpeedThreshold: 0.15
+  breathingAudioSource: {fileID: 0}
+  breathingLoopClip: {fileID: 0}
+  breathingVolume: 0.45
+  breathingMinDistance: 1.5
+  breathingMaxDistance: 14

@@ -1,8 +1,11 @@
 using UnityEngine;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
 public class BeartrapTrap : MonoBehaviour, IInteractable
 {
+    private static readonly List<BeartrapTrap> activeTraps = new List<BeartrapTrap>();
+
     [SerializeField] private Transform openVisual;
     [SerializeField] private Transform closedVisual;
     [SerializeField] private string openVisualName = "BearTrapOpen";
@@ -16,6 +19,8 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     [SerializeField] private string pickupLayerName = "Interact";
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip snapClip;
+    [SerializeField, Range(0f, 1f)] private float snapVolume = 1f;
+    [SerializeField] private Vector2 snapPitchRange = Vector2.one;
     [SerializeField] private UnityEvent onTriggered;
 
     private static AudioClip generatedSnapClip;
@@ -23,6 +28,9 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     private bool triggered;
     private int defaultLayer;
     private int pickupLayer = -1;
+
+    public static IReadOnlyList<BeartrapTrap> ActiveTraps => activeTraps;
+    public bool IsTriggered => triggered;
 
     private void Awake()
     {
@@ -32,6 +40,19 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         EnsureTriggerCollider();
         EnsureAudioSource();
         InitializeOpen();
+    }
+
+    private void OnEnable()
+    {
+        if (!activeTraps.Contains(this))
+        {
+            activeTraps.Add(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        activeTraps.Remove(this);
     }
 
     public void InitializeOpen()
@@ -67,6 +88,17 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         }
     }
 
+    public bool TryTrigger(VisitorAI visitor)
+    {
+        if (triggered || visitor == null)
+        {
+            return false;
+        }
+
+        Trigger(visitor);
+        return true;
+    }
+
     private void Trigger(PlayerController player)
     {
         triggered = true;
@@ -84,7 +116,7 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         SetVisualState(false);
         SetPickupInteractable(true);
 
-        visitor.TrapForSeconds(trapDuration);
+        visitor.TrapForSeconds(trapDuration, transform.position);
         PlaySnapSound();
         onTriggered?.Invoke();
     }
@@ -206,7 +238,8 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         }
 
         AudioClip clip = snapClip != null ? snapClip : GetGeneratedSnapClip();
-        audioSource.PlayOneShot(clip);
+        audioSource.pitch = Random.Range(snapPitchRange.x, snapPitchRange.y);
+        audioSource.PlayOneShot(clip, snapVolume);
     }
 
     private static AudioClip GetGeneratedSnapClip()
@@ -242,6 +275,8 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         triggerSize.z = Mathf.Max(0.1f, triggerSize.z);
         trapDuration = Mathf.Max(0f, trapDuration);
         pickupQuantity = Mathf.Max(1, pickupQuantity);
+        snapPitchRange.x = Mathf.Max(0.01f, snapPitchRange.x);
+        snapPitchRange.y = Mathf.Max(snapPitchRange.x, snapPitchRange.y);
 
         if (string.IsNullOrWhiteSpace(openVisualName))
         {
