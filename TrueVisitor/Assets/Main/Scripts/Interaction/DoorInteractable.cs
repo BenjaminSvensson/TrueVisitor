@@ -14,6 +14,8 @@ public class DoorInteractable : MonoBehaviour, IInteractable
     private Quaternion openRotation;
     private bool isOpen;
 
+    public bool IsOpen => isOpen;
+
     private void Awake()
     {
         if (doorPivot == null)
@@ -45,7 +47,27 @@ public class DoorInteractable : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        isOpen = !isOpen;
+        SetOpen(!isOpen);
+    }
+
+    public void Open()
+    {
+        SetOpen(true);
+    }
+
+    public void Close()
+    {
+        SetOpen(false);
+    }
+
+    private void SetOpen(bool open)
+    {
+        if (isOpen == open)
+        {
+            return;
+        }
+
+        isOpen = open;
 
         if (isOpen)
         {

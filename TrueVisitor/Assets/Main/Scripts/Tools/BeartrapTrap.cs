@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class BeartrapTrap : MonoBehaviour, IInteractable
 {
@@ -15,6 +16,7 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     [SerializeField] private string pickupLayerName = "Interact";
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip snapClip;
+    [SerializeField] private UnityEvent onTriggered;
 
     private static AudioClip generatedSnapClip;
     private BoxCollider triggerCollider;
@@ -52,12 +54,17 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         }
 
         PlayerController player = other.GetComponentInParent<PlayerController>();
-        if (player == null)
+        if (player != null)
         {
+            Trigger(player);
             return;
         }
 
-        Trigger(player);
+        VisitorAI visitor = other.GetComponentInParent<VisitorAI>();
+        if (visitor != null)
+        {
+            Trigger(visitor);
+        }
     }
 
     private void Trigger(PlayerController player)
@@ -68,6 +75,18 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
 
         player.LockMovementForSeconds(trapDuration);
         PlaySnapSound();
+        onTriggered?.Invoke();
+    }
+
+    private void Trigger(VisitorAI visitor)
+    {
+        triggered = true;
+        SetVisualState(false);
+        SetPickupInteractable(true);
+
+        visitor.TrapForSeconds(trapDuration);
+        PlaySnapSound();
+        onTriggered?.Invoke();
     }
 
     public void Interact()

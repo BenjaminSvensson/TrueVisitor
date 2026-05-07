@@ -13,6 +13,8 @@ public class BedInteractable : MonoBehaviour, IInteractable
     [SerializeField] private bool playCutscene = true;
     [SerializeField] private bool changeWorldToNight = true;
     [SerializeField] private bool onlyInteractOnce = true;
+    [SerializeField] private GameObject[] objectsToDisable;
+    [SerializeField] private GameObject[] objectsToEnable;
     [SerializeField] private Light[] lightsToChange;
     [SerializeField] private Color nightAmbientColor = new Color(0.025f, 0.035f, 0.08f, 1f);
     [SerializeField] private Color nightLightColor = new Color(0.35f, 0.45f, 0.75f, 1f);
@@ -36,6 +38,8 @@ public class BedInteractable : MonoBehaviour, IInteractable
         }
 
         hasInteracted = true;
+
+        ApplyObjectStateChanges();
 
         if (playCutscene)
         {
@@ -180,6 +184,28 @@ public class BedInteractable : MonoBehaviour, IInteractable
             else
             {
                 light.intensity *= localLightIntensityMultiplier;
+            }
+        }
+    }
+
+    private void ApplyObjectStateChanges()
+    {
+        SetObjectsActive(objectsToDisable, false);
+        SetObjectsActive(objectsToEnable, true);
+    }
+
+    private void SetObjectsActive(GameObject[] objects, bool active)
+    {
+        if (objects == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (objects[i] != null)
+            {
+                objects[i].SetActive(active);
             }
         }
     }
