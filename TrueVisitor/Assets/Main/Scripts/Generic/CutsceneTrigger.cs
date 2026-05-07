@@ -55,6 +55,18 @@ public class CutsceneTriggerAdvanced : MonoBehaviour
         }
     }
 
+    public bool TryPlayCutscene()
+    {
+        if (isPlaying)
+            return false;
+
+        if (playOnlyOnce && hasPlayed)
+            return false;
+
+        StartCoroutine(PlayCutscene());
+        return true;
+    }
+
     void OnDisable()
     {
         isPlaying = false;
