@@ -172,8 +172,7 @@ public class VisitorAI : MonoBehaviour
             return;
         }
 
-        sceneResetTriggered = true;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        ResetActiveScene();
     }
 
     private void TryResetSceneFromPlayerProximity()
@@ -190,9 +189,19 @@ public class VisitorAI : MonoBehaviour
 
         if (Vector3.Distance(visitorPosition, playerPosition) <= playerContactResetDistance)
         {
-            sceneResetTriggered = true;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            ResetActiveScene();
         }
+    }
+
+    private void ResetActiveScene()
+    {
+        if (sceneResetTriggered)
+        {
+            return;
+        }
+
+        sceneResetTriggered = true;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void TrapForSeconds(float duration)
