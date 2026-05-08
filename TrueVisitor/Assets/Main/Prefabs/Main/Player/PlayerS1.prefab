@@ -1006,6 +1006,7 @@ MonoBehaviour:
   interactionLayerName: Interact
   includeTriggerInteractables: 1
   interactionCursor: {fileID: 0}
+  interactionTip: {fileID: 0}
   selectedItemPlacer: {fileID: 5162037478862345111}
   visualizeInteractionChecks: 0
 --- !u!54 &5117461082557447459

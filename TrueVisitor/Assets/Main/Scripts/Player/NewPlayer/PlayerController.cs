@@ -74,6 +74,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string interactionLayerName = "Interact";
     [SerializeField] private bool includeTriggerInteractables = true;
     [SerializeField] private InteractionCursor interactionCursor;
+    [SerializeField] private InteractionTipDisplay interactionTip;
     [SerializeField] private PlayerBeartrapPlacer selectedItemPlacer;
     [SerializeField] private bool visualizeInteractionChecks = false;
 
@@ -111,6 +112,7 @@ public class PlayerController : MonoBehaviour
     private float _movementLockTimer;
     private int _interactionLayerMask;
     private IInteractable _focusedInteractable;
+    private IInteractable _previousFocusedInteractable;
     private Collider _focusedInteractableCollider;
     private Vector3 _lastInteractionOrigin;
     private Vector3 _lastInteractionDirection;
@@ -170,6 +172,11 @@ public class PlayerController : MonoBehaviour
             interactionCursor = InteractionCursor.FindOrAttachToCenteredCursor();
         }
 
+        if (interactionTip == null)
+        {
+            interactionTip = InteractionTipDisplay.FindOrCreate();
+        }
+
         if (selectedItemPlacer == null)
         {
             selectedItemPlacer = GetComponent<PlayerBeartrapPlacer>();
@@ -197,6 +204,7 @@ public class PlayerController : MonoBehaviour
         _actions.Player.Crouch.canceled -= OnCrouchCanceled;
         _actions.Player.Disable();
         _focusedInteractable = null;
+        _previousFocusedInteractable = null;
         if (interactionCursor != null)
         {
             interactionCursor.SetCanInteract(false);
@@ -484,6 +492,18 @@ public class PlayerController : MonoBehaviour
     private void UpdateInteractionFocus()
     {
         _focusedInteractable = FindBestInteractable();
+        if (_focusedInteractable != null && _focusedInteractable != _previousFocusedInteractable)
+        {
+            if (interactionTip == null)
+            {
+                interactionTip = InteractionTipDisplay.FindOrCreate();
+            }
+
+            interactionTip?.ShowFirstTimeFor(_focusedInteractable);
+        }
+
+        _previousFocusedInteractable = _focusedInteractable;
+
         if (interactionCursor != null)
         {
             interactionCursor.SetCanInteract(_focusedInteractable != null);

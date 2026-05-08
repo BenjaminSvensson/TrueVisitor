@@ -203,6 +203,7 @@ MonoBehaviour:
   playerContactResetDistance: 1.6
   stuckVelocityThreshold: 0.05
   stuckRecoveryDelay: 2
+  noiseInvestigateDuration: 6
   doorCheckDistance: 1.4
   doorCheckRadius: 0.35
   doorCheckMask:
@@ -225,3 +226,19 @@ MonoBehaviour:
   breathingVolume: 1
   breathingMinDistance: 7
   breathingMaxDistance: 45
+  spottedAudioSource: {fileID: 0}
+  spottedClip: {fileID: 0}
+  spottedVolume: 1
+  spottedMinDistance: 8
+  spottedMaxDistance: 55
+  chaseAudioSource: {fileID: 0}
+  chaseLoopClip: {fileID: 0}
+  chaseVolume: 1
+  chaseMinDistance: 8
+  chaseMaxDistance: 60
+  beartrappedAudioSource: {fileID: 0}
+  beartrappedClip: {fileID: 0}
+  beartrappedVolume: 1
+  beartrappedMinDistance: 8
+  beartrappedMaxDistance: 55
+  loopBeartrappedAudio: 0

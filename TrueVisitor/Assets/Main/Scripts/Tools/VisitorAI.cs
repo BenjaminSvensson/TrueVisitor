@@ -30,6 +30,7 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float playerContactResetDistance = 1.6f;
     [SerializeField] private float stuckVelocityThreshold = 0.05f;
     [SerializeField] private float stuckRecoveryDelay = 2f;
+    [SerializeField] private float noiseInvestigateDuration = 6f;
 
     [Header("Doors")]
     [SerializeField] private float doorCheckDistance = 1.4f;
@@ -54,6 +55,22 @@ public class VisitorAI : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float breathingVolume = 1f;
     [SerializeField] private float breathingMinDistance = 7f;
     [SerializeField] private float breathingMaxDistance = 45f;
+    [SerializeField] private AudioSource spottedAudioSource;
+    [SerializeField] private AudioClip spottedClip;
+    [SerializeField, Range(0f, 1f)] private float spottedVolume = 1f;
+    [SerializeField] private float spottedMinDistance = 8f;
+    [SerializeField] private float spottedMaxDistance = 55f;
+    [SerializeField] private AudioSource chaseAudioSource;
+    [SerializeField] private AudioClip chaseLoopClip;
+    [SerializeField, Range(0f, 1f)] private float chaseVolume = 1f;
+    [SerializeField] private float chaseMinDistance = 8f;
+    [SerializeField] private float chaseMaxDistance = 60f;
+    [SerializeField] private AudioSource beartrappedAudioSource;
+    [SerializeField] private AudioClip beartrappedClip;
+    [SerializeField, Range(0f, 1f)] private float beartrappedVolume = 1f;
+    [SerializeField] private float beartrappedMinDistance = 8f;
+    [SerializeField] private float beartrappedMaxDistance = 55f;
+    [SerializeField] private bool loopBeartrappedAudio;
 
     private NavMeshAgent agent;
     private int searchPointIndex;
@@ -64,6 +81,7 @@ public class VisitorAI : MonoBehaviour
     private Vector3 spawnPosition;
     private Vector3 fallbackRoamDestination;
     private Vector3 currentSearchDestination;
+    private Vector3 noiseInvestigationPosition;
     private Vector3 lastPosition;
     private float stuckTimer;
     private bool hasFallbackRoamDestination;
@@ -71,6 +89,8 @@ public class VisitorAI : MonoBehaviour
     private bool trapped;
     private float trappedUntilTime;
     private bool sceneResetTriggered;
+    private bool wasChasingPlayer;
+    private float noiseInvestigationEndTime = -999f;
 
     private void Awake()
     {
@@ -136,9 +156,21 @@ public class VisitorAI : MonoBehaviour
             lastSawPlayerTime = Time.time;
         }
 
-        if (player != null && Time.time - lastSawPlayerTime <= losePlayerAfter)
+        bool shouldChase = player != null && Time.time - lastSawPlayerTime <= losePlayerAfter;
+        if (shouldChase && !wasChasingPlayer)
+        {
+            PlaySpottedAudio();
+        }
+
+        wasChasingPlayer = shouldChase;
+
+        if (shouldChase)
         {
             ChasePlayer();
+        }
+        else if (IsInvestigatingNoise())
+        {
+            InvestigateNoise();
         }
         else
         {
@@ -218,7 +250,28 @@ public class VisitorAI : MonoBehaviour
 
         trapped = true;
         trappedUntilTime = Mathf.Max(trappedUntilTime, Time.time + Mathf.Max(0f, duration));
+        wasChasingPlayer = false;
         StopAgentAt(trapPosition);
+        PlayBeartrappedAudio();
+    }
+
+    public void AlertToNoise(Vector3 noisePosition)
+    {
+        AlertToNoise(noisePosition, noiseInvestigateDuration);
+    }
+
+    public void AlertToNoise(Vector3 noisePosition, float duration)
+    {
+        if (trapped)
+        {
+            return;
+        }
+
+        noiseInvestigationPosition = noisePosition;
+        noiseInvestigationEndTime = Time.time + Mathf.Max(0f, duration);
+        hasSearchDestination = false;
+        hasFallbackRoamDestination = false;
+        waitTimer = 0f;
     }
 
     private void UpdateTrapState()
@@ -258,6 +311,7 @@ public class VisitorAI : MonoBehaviour
         trapped = false;
         hasSearchDestination = false;
         hasFallbackRoamDestination = false;
+        StopBeartrappedAudio();
         waitTimer = 0f;
 
         TryPlaceOnNavMesh();
@@ -331,6 +385,32 @@ public class VisitorAI : MonoBehaviour
         if (NavMesh.SamplePosition(player.position, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
+        }
+    }
+
+    private bool IsInvestigatingNoise()
+    {
+        return Time.time <= noiseInvestigationEndTime;
+    }
+
+    private void InvestigateNoise()
+    {
+        agent.isStopped = false;
+        agent.speed = chaseSpeed;
+
+        if (NavMesh.SamplePosition(noiseInvestigationPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
+
+        Vector3 currentPosition = transform.position;
+        Vector3 targetPosition = noiseInvestigationPosition;
+        currentPosition.y = 0f;
+        targetPosition.y = 0f;
+
+        if (Vector3.Distance(currentPosition, targetPosition) <= searchPointReachDistance)
+        {
+            noiseInvestigationEndTime = Time.time;
         }
     }
 
@@ -684,6 +764,36 @@ public class VisitorAI : MonoBehaviour
             breathingMaxDistance
         );
 
+        spottedAudioSource = SetupOneShotAudioSource(
+            spottedAudioSource,
+            "Visitor Spotted Audio",
+            spottedVolume,
+            spottedMinDistance,
+            spottedMaxDistance
+        );
+
+        chaseAudioSource = SetupLoopingAudioSource(
+            chaseAudioSource,
+            "Visitor Chase Audio",
+            chaseLoopClip,
+            chaseVolume,
+            chaseMinDistance,
+            chaseMaxDistance
+        );
+
+        beartrappedAudioSource = SetupLoopingAudioSource(
+            beartrappedAudioSource,
+            "Visitor Beartrapped Audio",
+            beartrappedClip,
+            beartrappedVolume,
+            beartrappedMinDistance,
+            beartrappedMaxDistance
+        );
+        if (beartrappedAudioSource != null)
+        {
+            beartrappedAudioSource.loop = loopBeartrappedAudio;
+        }
+
         if (breathingAudioSource != null && breathingLoopClip != null && !breathingAudioSource.isPlaying)
         {
             breathingAudioSource.Play();
@@ -726,10 +836,23 @@ public class VisitorAI : MonoBehaviour
         return source;
     }
 
+    private AudioSource SetupOneShotAudioSource(
+        AudioSource source,
+        string objectName,
+        float volume,
+        float minDistance,
+        float maxDistance)
+    {
+        source = SetupLoopingAudioSource(source, objectName, null, volume, minDistance, maxDistance);
+        source.loop = false;
+        return source;
+    }
+
     private void UpdateLoopingAudio()
     {
         UpdateBreathingAudio();
         UpdateFootstepAudio();
+        UpdateChaseAudio();
     }
 
     private void UpdateBreathingAudio()
@@ -746,6 +869,73 @@ public class VisitorAI : MonoBehaviour
         if (!breathingAudioSource.isPlaying)
         {
             breathingAudioSource.Play();
+        }
+    }
+
+    private void UpdateChaseAudio()
+    {
+        if (chaseAudioSource == null || chaseLoopClip == null)
+        {
+            return;
+        }
+
+        chaseAudioSource.volume = chaseVolume;
+        chaseAudioSource.minDistance = chaseMinDistance;
+        chaseAudioSource.maxDistance = chaseMaxDistance;
+
+        bool shouldPlay = wasChasingPlayer && !trapped;
+        if (shouldPlay && !chaseAudioSource.isPlaying)
+        {
+            chaseAudioSource.clip = chaseLoopClip;
+            chaseAudioSource.Play();
+        }
+        else if (!shouldPlay && chaseAudioSource.isPlaying)
+        {
+            chaseAudioSource.Stop();
+        }
+    }
+
+    private void PlaySpottedAudio()
+    {
+        if (spottedAudioSource == null || spottedClip == null)
+        {
+            return;
+        }
+
+        spottedAudioSource.volume = spottedVolume;
+        spottedAudioSource.minDistance = spottedMinDistance;
+        spottedAudioSource.maxDistance = spottedMaxDistance;
+        spottedAudioSource.PlayOneShot(spottedClip, spottedVolume);
+    }
+
+    private void PlayBeartrappedAudio()
+    {
+        if (beartrappedAudioSource == null || beartrappedClip == null)
+        {
+            return;
+        }
+
+        beartrappedAudioSource.volume = beartrappedVolume;
+        beartrappedAudioSource.minDistance = beartrappedMinDistance;
+        beartrappedAudioSource.maxDistance = beartrappedMaxDistance;
+        beartrappedAudioSource.clip = beartrappedClip;
+        beartrappedAudioSource.loop = loopBeartrappedAudio;
+
+        if (loopBeartrappedAudio)
+        {
+            beartrappedAudioSource.Play();
+        }
+        else
+        {
+            beartrappedAudioSource.PlayOneShot(beartrappedClip, beartrappedVolume);
+        }
+    }
+
+    private void StopBeartrappedAudio()
+    {
+        if (beartrappedAudioSource != null && loopBeartrappedAudio && beartrappedAudioSource.isPlaying)
+        {
+            beartrappedAudioSource.Stop();
         }
     }
 
@@ -787,6 +977,7 @@ public class VisitorAI : MonoBehaviour
         playerContactResetDistance = Mathf.Max(0.01f, playerContactResetDistance);
         stuckVelocityThreshold = Mathf.Max(0f, stuckVelocityThreshold);
         stuckRecoveryDelay = Mathf.Max(0f, stuckRecoveryDelay);
+        noiseInvestigateDuration = Mathf.Max(0f, noiseInvestigateDuration);
         doorCheckDistance = Mathf.Max(0f, doorCheckDistance);
         doorCheckRadius = Mathf.Max(0.01f, doorCheckRadius);
         doorOpenCooldown = Mathf.Max(0f, doorOpenCooldown);
@@ -797,5 +988,11 @@ public class VisitorAI : MonoBehaviour
         footstepSpeedThreshold = Mathf.Max(0f, footstepSpeedThreshold);
         breathingMinDistance = Mathf.Max(0f, breathingMinDistance);
         breathingMaxDistance = Mathf.Max(breathingMinDistance, breathingMaxDistance);
+        spottedMinDistance = Mathf.Max(0f, spottedMinDistance);
+        spottedMaxDistance = Mathf.Max(spottedMinDistance, spottedMaxDistance);
+        chaseMinDistance = Mathf.Max(0f, chaseMinDistance);
+        chaseMaxDistance = Mathf.Max(chaseMinDistance, chaseMaxDistance);
+        beartrappedMinDistance = Mathf.Max(0f, beartrappedMinDistance);
+        beartrappedMaxDistance = Mathf.Max(beartrappedMinDistance, beartrappedMaxDistance);
     }
 }
