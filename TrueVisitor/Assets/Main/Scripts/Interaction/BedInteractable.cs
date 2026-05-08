@@ -15,6 +15,9 @@ public class BedInteractable : MonoBehaviour, IInteractable
     [SerializeField] private bool onlyInteractOnce = true;
     [SerializeField] private GameObject[] objectsToDisable;
     [SerializeField] private GameObject[] objectsToEnable;
+    [SerializeField] private TextMeshProUGUI changeText1;
+    [SerializeField] private TextMeshProUGUI changeText2;
+    [SerializeField] private SurviveTimerDisplay surviveTimer;
     [SerializeField] private Light[] lightsToChange;
     [SerializeField] private Color nightAmbientColor = new Color(0.025f, 0.035f, 0.08f, 1f);
     [SerializeField] private Color nightLightColor = new Color(0.35f, 0.45f, 0.75f, 1f);
@@ -49,6 +52,7 @@ public class BedInteractable : MonoBehaviour, IInteractable
         if (changeWorldToNight)
         {
             ApplyNightLighting();
+            StartSurviveTimer();
         }
     }
 
@@ -90,11 +94,6 @@ public class BedInteractable : MonoBehaviour, IInteractable
         if (warningObject != null)
         {
             interactWarningText = warningObject.GetComponentInChildren<TextMeshProUGUI>(true);
-        }
-
-        if (interactWarningText == null)
-        {
-            interactWarningText = FindAnyObjectByType<TextMeshProUGUI>();
         }
 
         return interactWarningText;
@@ -188,10 +187,55 @@ public class BedInteractable : MonoBehaviour, IInteractable
         }
     }
 
+    private void StartSurviveTimer()
+    {
+        SurviveTimerDisplay timer = GetSurviveTimer();
+        if (timer != null)
+        {
+            timer.StartCountdown();
+        }
+    }
+
+    private SurviveTimerDisplay GetSurviveTimer()
+    {
+        if (surviveTimer != null)
+        {
+            return surviveTimer;
+        }
+
+        GameObject timerObject = GameObject.Find("SurviveTime");
+        if (timerObject == null)
+        {
+            timerObject = GameObject.Find("FreakyTimer");
+        }
+
+        if (timerObject != null)
+        {
+            surviveTimer = timerObject.GetComponent<SurviveTimerDisplay>();
+        }
+
+        if (surviveTimer == null)
+        {
+            surviveTimer = FindAnyObjectByType<SurviveTimerDisplay>(FindObjectsInactive.Include);
+        }
+
+        return surviveTimer;
+    }
+
     private void ApplyObjectStateChanges()
     {
         SetObjectsActive(objectsToDisable, false);
         SetObjectsActive(objectsToEnable, true);
+
+        if (changeText1 != null)
+        {
+            changeText1.text = "THE FREAKY VISITOR IS VISITING TONIGHT!";
+        }
+
+        if (changeText2 != null)
+        {
+            changeText2.text = "Heeeelp";
+        }
     }
 
     private void SetObjectsActive(GameObject[] objects, bool active)

@@ -845,6 +845,11 @@ MonoBehaviour:
   playCutscene: 1
   changeWorldToNight: 1
   onlyInteractOnce: 1
+  objectsToDisable: []
+  objectsToEnable: []
+  changeText1: {fileID: 0}
+  changeText2: {fileID: 0}
+  surviveTimer: {fileID: 0}
   lightsToChange: []
   nightAmbientColor: {r: 0.025, g: 0.035, b: 0.08, a: 1}
   nightLightColor: {r: 0.35, g: 0.45, b: 0.75, a: 1}

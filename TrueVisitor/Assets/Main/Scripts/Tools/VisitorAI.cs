@@ -27,7 +27,9 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float navMeshSnapDistance = 4f;
     [SerializeField] private float fallbackRoamRadius = 8f;
     [SerializeField] private float fallbackRoamWaitTime = 1.5f;
-    [SerializeField] private float playerContactResetDistance = 0.75f;
+    [SerializeField] private float playerContactResetDistance = 1.6f;
+    [SerializeField] private float stuckVelocityThreshold = 0.05f;
+    [SerializeField] private float stuckRecoveryDelay = 2f;
 
     [Header("Doors")]
     [SerializeField] private float doorCheckDistance = 1.4f;
@@ -43,15 +45,15 @@ public class VisitorAI : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioSource footstepAudioSource;
     [SerializeField] private AudioClip footstepLoopClip;
-    [SerializeField, Range(0f, 1f)] private float footstepVolume = 0.65f;
-    [SerializeField] private float footstepMinDistance = 1.5f;
-    [SerializeField] private float footstepMaxDistance = 18f;
+    [SerializeField, Range(0f, 1f)] private float footstepVolume = 1f;
+    [SerializeField] private float footstepMinDistance = 8f;
+    [SerializeField] private float footstepMaxDistance = 55f;
     [SerializeField] private float footstepSpeedThreshold = 0.15f;
     [SerializeField] private AudioSource breathingAudioSource;
     [SerializeField] private AudioClip breathingLoopClip;
-    [SerializeField, Range(0f, 1f)] private float breathingVolume = 0.45f;
-    [SerializeField] private float breathingMinDistance = 1.5f;
-    [SerializeField] private float breathingMaxDistance = 14f;
+    [SerializeField, Range(0f, 1f)] private float breathingVolume = 1f;
+    [SerializeField] private float breathingMinDistance = 7f;
+    [SerializeField] private float breathingMaxDistance = 45f;
 
     private NavMeshAgent agent;
     private int searchPointIndex;
@@ -62,15 +64,19 @@ public class VisitorAI : MonoBehaviour
     private Vector3 spawnPosition;
     private Vector3 fallbackRoamDestination;
     private Vector3 currentSearchDestination;
+    private Vector3 lastPosition;
+    private float stuckTimer;
     private bool hasFallbackRoamDestination;
     private bool hasSearchDestination;
     private bool trapped;
+    private float trappedUntilTime;
     private bool sceneResetTriggered;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         spawnPosition = transform.position;
+        lastPosition = transform.position;
 
         if (player == null)
         {
@@ -116,7 +122,7 @@ public class VisitorAI : MonoBehaviour
 
         if (trapped)
         {
-            agent.isStopped = true;
+            UpdateTrapState();
             UpdateLoopingAudio();
             return;
         }
@@ -140,6 +146,7 @@ public class VisitorAI : MonoBehaviour
         }
 
         TryOpenDoorAhead();
+        RecoverIfStuck();
         UpdateLoopingAudio();
     }
 
@@ -200,29 +207,55 @@ public class VisitorAI : MonoBehaviour
             return;
         }
 
-        StartCoroutine(TrapRoutine(duration, trapPosition));
+        trapped = true;
+        trappedUntilTime = Mathf.Max(trappedUntilTime, Time.time + Mathf.Max(0f, duration));
+        StopAgentAt(trapPosition);
     }
 
-    private System.Collections.IEnumerator TrapRoutine(float duration, Vector3 trapPosition)
+    private void UpdateTrapState()
     {
-        trapped = true;
+        if (Time.time < trappedUntilTime)
+        {
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
+            return;
+        }
+
+        ReleaseFromTrap();
+    }
+
+    private void StopAgentAt(Vector3 position)
+    {
+        if (!IsAgentReady())
+        {
+            TryPlaceOnNavMesh();
+        }
+
         if (IsAgentReady())
         {
+            agent.isStopped = true;
             agent.ResetPath();
             agent.velocity = Vector3.zero;
-            agent.isStopped = true;
 
-            if (NavMesh.SamplePosition(trapPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(position, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
             {
                 agent.Warp(hit.position);
             }
         }
+    }
 
-        yield return new WaitForSeconds(Mathf.Max(0f, duration));
-
+    private void ReleaseFromTrap()
+    {
         trapped = false;
+        hasSearchDestination = false;
+        hasFallbackRoamDestination = false;
+        waitTimer = 0f;
+
+        TryPlaceOnNavMesh();
+
         if (IsAgentReady())
         {
+            agent.ResetPath();
             agent.velocity = Vector3.zero;
             agent.isStopped = false;
         }
@@ -521,6 +554,58 @@ public class VisitorAI : MonoBehaviour
         lastDoorOpenTime = Time.time;
     }
 
+    private void RecoverIfStuck()
+    {
+        if (!IsAgentReady() || agent.isStopped || agent.pathPending)
+        {
+            stuckTimer = 0f;
+            lastPosition = transform.position;
+            return;
+        }
+
+        bool wantsToMove = agent.hasPath && agent.remainingDistance > searchPointReachDistance;
+        if (!wantsToMove)
+        {
+            stuckTimer = 0f;
+            lastPosition = transform.position;
+            return;
+        }
+
+        float movedDistance = Vector3.Distance(transform.position, lastPosition);
+        if (movedDistance <= stuckVelocityThreshold)
+        {
+            stuckTimer += Time.deltaTime;
+            if (stuckTimer >= stuckRecoveryDelay)
+            {
+                RecoverNavigation();
+            }
+        }
+        else
+        {
+            stuckTimer = 0f;
+        }
+
+        lastPosition = transform.position;
+    }
+
+    private void RecoverNavigation()
+    {
+        stuckTimer = 0f;
+        hasSearchDestination = false;
+        hasFallbackRoamDestination = false;
+
+        TryPlaceOnNavMesh();
+
+        if (IsAgentReady())
+        {
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            agent.isStopped = false;
+        }
+
+        AdvanceSearchPoint();
+    }
+
     private void TryTriggerTrapUnderfoot()
     {
         if (TryTriggerRegisteredTrap())
@@ -623,7 +708,7 @@ public class VisitorAI : MonoBehaviour
         source.playOnAwake = false;
         source.loop = true;
         source.spatialBlend = 1f;
-        source.rolloffMode = AudioRolloffMode.Logarithmic;
+        source.rolloffMode = AudioRolloffMode.Linear;
         source.minDistance = minDistance;
         source.maxDistance = maxDistance;
         source.volume = volume;
@@ -691,6 +776,8 @@ public class VisitorAI : MonoBehaviour
         fallbackRoamRadius = Mathf.Max(0f, fallbackRoamRadius);
         fallbackRoamWaitTime = Mathf.Max(0f, fallbackRoamWaitTime);
         playerContactResetDistance = Mathf.Max(0.01f, playerContactResetDistance);
+        stuckVelocityThreshold = Mathf.Max(0f, stuckVelocityThreshold);
+        stuckRecoveryDelay = Mathf.Max(0f, stuckRecoveryDelay);
         doorCheckDistance = Mathf.Max(0f, doorCheckDistance);
         doorCheckRadius = Mathf.Max(0.01f, doorCheckRadius);
         doorOpenCooldown = Mathf.Max(0f, doorOpenCooldown);
