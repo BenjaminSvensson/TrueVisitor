@@ -17,6 +17,10 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float fieldOfView = 115f;
     [SerializeField] private float eyeHeight = 1.6f;
     [SerializeField] private LayerMask lineOfSightMask = ~0;
+    [SerializeField] private float playerVisionBodyHeight = 1.05f;
+    [SerializeField] private float playerVisionBodyWidth = 0.45f;
+    [SerializeField] private float playerVisionBodyVerticalSpread = 0.35f;
+    [SerializeField] private int requiredVisibleBodySamples = 3;
     [SerializeField] private float spotPlayerDelay = 0.45f;
     [SerializeField] private float losePlayerAfter = 3f;
 
@@ -397,15 +401,56 @@ public class VisitorAI : MonoBehaviour
         }
 
         Vector3 eyes = transform.position + Vector3.up * eyeHeight;
-        Vector3 target = player.position + Vector3.up * eyeHeight;
-        Vector3 toPlayer = target - eyes;
-        float distance = toPlayer.magnitude;
-        if (distance > sightRange)
+        Vector3 bodyCenter = player.position + Vector3.up * playerVisionBodyHeight;
+        Vector3 toPlayerCenter = bodyCenter - eyes;
+        if (toPlayerCenter.magnitude > sightRange)
         {
             return false;
         }
 
-        Vector3 direction = toPlayer / distance;
+        Vector3 side = Vector3.Cross(Vector3.up, toPlayerCenter);
+        if (side.sqrMagnitude <= 0.0001f)
+        {
+            side = player.right;
+        }
+        side.Normalize();
+
+        Vector3[] sightPoints =
+        {
+            bodyCenter,
+            bodyCenter + side * playerVisionBodyWidth,
+            bodyCenter - side * playerVisionBodyWidth,
+            bodyCenter + Vector3.up * playerVisionBodyVerticalSpread,
+            bodyCenter - Vector3.up * playerVisionBodyVerticalSpread
+        };
+
+        if (!CanSeePlayerSightPoint(eyes, sightPoints[0]))
+        {
+            return false;
+        }
+
+        int visibleSamples = 1;
+        for (int i = 1; i < sightPoints.Length; i++)
+        {
+            if (CanSeePlayerSightPoint(eyes, sightPoints[i]))
+            {
+                visibleSamples++;
+            }
+        }
+
+        return visibleSamples >= requiredVisibleBodySamples;
+    }
+
+    private bool CanSeePlayerSightPoint(Vector3 eyes, Vector3 target)
+    {
+        Vector3 toTarget = target - eyes;
+        float distance = toTarget.magnitude;
+        if (distance > sightRange || distance <= 0.001f)
+        {
+            return false;
+        }
+
+        Vector3 direction = toTarget / distance;
         if (Vector3.Angle(transform.forward, direction) > fieldOfView * 0.5f)
         {
             return false;
@@ -1398,6 +1443,10 @@ public class VisitorAI : MonoBehaviour
         sightRange = Mathf.Max(0f, sightRange);
         fieldOfView = Mathf.Clamp(fieldOfView, 0f, 360f);
         eyeHeight = Mathf.Max(0f, eyeHeight);
+        playerVisionBodyHeight = Mathf.Max(0f, playerVisionBodyHeight);
+        playerVisionBodyWidth = Mathf.Max(0f, playerVisionBodyWidth);
+        playerVisionBodyVerticalSpread = Mathf.Max(0f, playerVisionBodyVerticalSpread);
+        requiredVisibleBodySamples = Mathf.Clamp(requiredVisibleBodySamples, 1, 5);
         spotPlayerDelay = Mathf.Max(0f, spotPlayerDelay);
         losePlayerAfter = Mathf.Max(0f, losePlayerAfter);
         searchSpeed = Mathf.Max(0f, searchSpeed);
