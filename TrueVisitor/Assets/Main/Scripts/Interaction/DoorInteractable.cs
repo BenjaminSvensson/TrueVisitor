@@ -10,6 +10,8 @@ public class DoorInteractable : MonoBehaviour, IInteractable
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip openClip;
     [SerializeField] private AudioClip closeClip;
+    [SerializeField] private float visitorAlertDistance = 9f;
+    [SerializeField] private float visitorAlertDuration = 4f;
     [SerializeField] private UnityEvent onOpened;
     [SerializeField] private UnityEvent onClosed;
 
@@ -76,11 +78,13 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         if (isOpen)
         {
             PlaySound(openClip);
+            AlertVisitors();
             onOpened?.Invoke();
         }
         else
         {
             PlaySound(closeClip);
+            AlertVisitors();
             onClosed?.Invoke();
         }
     }
@@ -112,8 +116,37 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         audioSource.PlayOneShot(clip);
     }
 
+    private void AlertVisitors()
+    {
+        if (visitorAlertDistance <= 0f || visitorAlertDuration <= 0f)
+        {
+            return;
+        }
+
+        VisitorAI[] visitors = FindObjectsByType<VisitorAI>(FindObjectsSortMode.None);
+        Vector3 soundPosition = transform.position;
+        Vector2 soundFlat = new Vector2(soundPosition.x, soundPosition.z);
+        for (int i = 0; i < visitors.Length; i++)
+        {
+            VisitorAI visitor = visitors[i];
+            if (visitor == null)
+            {
+                continue;
+            }
+
+            Vector3 visitorPosition = visitor.transform.position;
+            Vector2 visitorFlat = new Vector2(visitorPosition.x, visitorPosition.z);
+            if (Vector2.Distance(visitorFlat, soundFlat) <= visitorAlertDistance)
+            {
+                visitor.AlertToNoise(soundPosition, visitorAlertDuration);
+            }
+        }
+    }
+
     private void OnValidate()
     {
         openSpeed = Mathf.Max(0f, openSpeed);
+        visitorAlertDistance = Mathf.Max(0f, visitorAlertDistance);
+        visitorAlertDuration = Mathf.Max(0f, visitorAlertDuration);
     }
 }

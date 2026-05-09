@@ -34,6 +34,7 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float stuckVelocityThreshold = 0.05f;
     [SerializeField] private float stuckRecoveryDelay = 2f;
     [SerializeField] private float noiseInvestigateDuration = 6f;
+    [SerializeField] private float noiseReachableSearchRadius = 12f;
 
     [Header("Doors")]
     [SerializeField] private float doorCheckDistance = 1.4f;
@@ -85,10 +86,12 @@ public class VisitorAI : MonoBehaviour
     private Vector3 fallbackRoamDestination;
     private Vector3 currentSearchDestination;
     private Vector3 noiseInvestigationPosition;
+    private Vector3 noiseInvestigationDestination;
     private Vector3 lastPosition;
     private float stuckTimer;
     private bool hasFallbackRoamDestination;
     private bool hasSearchDestination;
+    private bool hasNoiseInvestigationDestination;
     private bool trapped;
     private float trappedUntilTime;
     private bool sceneResetTriggered;
@@ -275,11 +278,27 @@ public class VisitorAI : MonoBehaviour
             return;
         }
 
+        bool wasAlreadyInvestigatingNoise = IsInvestigatingNoise();
         noiseInvestigationPosition = noisePosition;
         noiseInvestigationEndTime = Time.time + Mathf.Max(0f, duration);
+        hasNoiseInvestigationDestination = false;
         hasSearchDestination = false;
         hasFallbackRoamDestination = false;
         waitTimer = 0f;
+
+        if (IsAgentReady() && TryFindReachableNavMeshPointNear(noiseInvestigationPosition, noiseReachableSearchRadius, out noiseInvestigationDestination))
+        {
+            hasNoiseInvestigationDestination = true;
+            agent.isStopped = false;
+            ApplyDefaultMovementSettings();
+            agent.speed = chaseSpeed;
+            agent.SetDestination(noiseInvestigationDestination);
+        }
+
+        if (!wasAlreadyInvestigatingNoise)
+        {
+            PlaySpottedAudio();
+        }
     }
 
     private void UpdateTrapState()
@@ -408,19 +427,29 @@ public class VisitorAI : MonoBehaviour
         ApplyDefaultMovementSettings();
         agent.speed = chaseSpeed;
 
-        if (NavMesh.SamplePosition(noiseInvestigationPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
+        if (!hasNoiseInvestigationDestination)
         {
-            agent.SetDestination(hit.position);
+            if (TryFindReachableNavMeshPointNear(noiseInvestigationPosition, noiseReachableSearchRadius, out noiseInvestigationDestination))
+            {
+                hasNoiseInvestigationDestination = true;
+                agent.SetDestination(noiseInvestigationDestination);
+            }
+            else
+            {
+                noiseInvestigationEndTime = Time.time;
+                return;
+            }
         }
 
         Vector3 currentPosition = transform.position;
-        Vector3 targetPosition = noiseInvestigationPosition;
+        Vector3 targetPosition = noiseInvestigationDestination;
         currentPosition.y = 0f;
         targetPosition.y = 0f;
 
         if (Vector3.Distance(currentPosition, targetPosition) <= searchPointReachDistance)
         {
             noiseInvestigationEndTime = Time.time;
+            hasNoiseInvestigationDestination = false;
         }
     }
 
@@ -611,6 +640,94 @@ public class VisitorAI : MonoBehaviour
 
         point = center;
         return false;
+    }
+
+    private bool TryFindReachableNavMeshPointNear(Vector3 target, float maxRadius, out Vector3 point)
+    {
+        NavMeshPath path = new NavMeshPath();
+        float bestCompleteDistance = float.PositiveInfinity;
+        float bestPartialDistance = float.PositiveInfinity;
+        Vector3 bestCompletePoint = target;
+        Vector3 bestPartialPoint = target;
+        bool hasCompletePoint = false;
+        bool hasPartialPoint = false;
+
+        CheckReachableCandidate(target, navMeshSnapDistance, path, target, ref hasCompletePoint, ref bestCompleteDistance, ref bestCompletePoint, ref hasPartialPoint, ref bestPartialDistance, ref bestPartialPoint);
+
+        int ringCount = 4;
+        int directionsPerRing = 12;
+        float radiusStep = Mathf.Max(0.1f, maxRadius / ringCount);
+
+        for (int ring = 1; ring <= ringCount; ring++)
+        {
+            float radius = radiusStep * ring;
+            for (int i = 0; i < directionsPerRing; i++)
+            {
+                float angle = (Mathf.PI * 2f * i) / directionsPerRing;
+                Vector3 candidate = target + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+                CheckReachableCandidate(candidate, radiusStep, path, target, ref hasCompletePoint, ref bestCompleteDistance, ref bestCompletePoint, ref hasPartialPoint, ref bestPartialDistance, ref bestPartialPoint);
+            }
+        }
+
+        if (hasCompletePoint)
+        {
+            point = bestCompletePoint;
+            return true;
+        }
+
+        if (hasPartialPoint)
+        {
+            point = bestPartialPoint;
+            return true;
+        }
+
+        point = target;
+        return false;
+    }
+
+    private void CheckReachableCandidate(
+        Vector3 candidate,
+        float sampleDistance,
+        NavMeshPath path,
+        Vector3 target,
+        ref bool hasCompletePoint,
+        ref float bestCompleteDistance,
+        ref Vector3 bestCompletePoint,
+        ref bool hasPartialPoint,
+        ref float bestPartialDistance,
+        ref Vector3 bestPartialPoint)
+    {
+        if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, sampleDistance, NavMesh.AllAreas))
+        {
+            return;
+        }
+
+        if (!agent.CalculatePath(hit.position, path))
+        {
+            return;
+        }
+
+        if (path.status == NavMeshPathStatus.PathComplete)
+        {
+            float distanceToNoise = Vector3.SqrMagnitude(hit.position - target);
+            if (distanceToNoise < bestCompleteDistance)
+            {
+                hasCompletePoint = true;
+                bestCompleteDistance = distanceToNoise;
+                bestCompletePoint = hit.position;
+            }
+        }
+        else if (path.status == NavMeshPathStatus.PathPartial && path.corners.Length > 0)
+        {
+            Vector3 partialEnd = path.corners[path.corners.Length - 1];
+            float distanceToNoise = Vector3.SqrMagnitude(partialEnd - target);
+            if (distanceToNoise < bestPartialDistance)
+            {
+                hasPartialPoint = true;
+                bestPartialDistance = distanceToNoise;
+                bestPartialPoint = partialEnd;
+            }
+        }
     }
 
     private bool IsAgentReady()
@@ -1022,6 +1139,7 @@ public class VisitorAI : MonoBehaviour
         stuckVelocityThreshold = Mathf.Max(0f, stuckVelocityThreshold);
         stuckRecoveryDelay = Mathf.Max(0f, stuckRecoveryDelay);
         noiseInvestigateDuration = Mathf.Max(0f, noiseInvestigateDuration);
+        noiseReachableSearchRadius = Mathf.Max(0f, noiseReachableSearchRadius);
         doorCheckDistance = Mathf.Max(0f, doorCheckDistance);
         doorCheckRadius = Mathf.Max(0.01f, doorCheckRadius);
         doorOpenCooldown = Mathf.Max(0f, doorOpenCooldown);

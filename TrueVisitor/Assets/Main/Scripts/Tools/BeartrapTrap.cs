@@ -22,6 +22,8 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     [SerializeField] private AudioClip snapClip;
     [SerializeField, Range(0f, 1f)] private float snapVolume = 1f;
     [SerializeField] private Vector2 snapPitchRange = Vector2.one;
+    [SerializeField] private float visitorAlertDistance = 30f;
+    [SerializeField] private float visitorAlertDuration = 8f;
     [SerializeField] private UnityEvent onTriggered;
 
     private static AudioClip generatedSnapClip;
@@ -261,6 +263,34 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         AudioClip clip = snapClip != null ? snapClip : GetGeneratedSnapClip();
         audioSource.pitch = Random.Range(snapPitchRange.x, snapPitchRange.y);
         audioSource.PlayOneShot(clip, snapVolume);
+        AlertVisitors();
+    }
+
+    private void AlertVisitors()
+    {
+        if (visitorAlertDistance <= 0f || visitorAlertDuration <= 0f)
+        {
+            return;
+        }
+
+        VisitorAI[] visitors = FindObjectsByType<VisitorAI>(FindObjectsSortMode.None);
+        Vector3 soundPosition = transform.position;
+        Vector2 soundFlat = new Vector2(soundPosition.x, soundPosition.z);
+        for (int i = 0; i < visitors.Length; i++)
+        {
+            VisitorAI visitor = visitors[i];
+            if (visitor == null)
+            {
+                continue;
+            }
+
+            Vector3 visitorPosition = visitor.transform.position;
+            Vector2 visitorFlat = new Vector2(visitorPosition.x, visitorPosition.z);
+            if (Vector2.Distance(visitorFlat, soundFlat) <= visitorAlertDistance)
+            {
+                visitor.AlertToNoise(soundPosition, visitorAlertDuration);
+            }
+        }
     }
 
     private static AudioClip GetGeneratedSnapClip()
@@ -299,6 +329,8 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         maxTriggerUses = Mathf.Max(1, maxTriggerUses);
         snapPitchRange.x = Mathf.Max(0.01f, snapPitchRange.x);
         snapPitchRange.y = Mathf.Max(snapPitchRange.x, snapPitchRange.y);
+        visitorAlertDistance = Mathf.Max(0f, visitorAlertDistance);
+        visitorAlertDuration = Mathf.Max(0f, visitorAlertDuration);
 
         if (string.IsNullOrWhiteSpace(openVisualName))
         {
