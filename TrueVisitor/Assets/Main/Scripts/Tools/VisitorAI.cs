@@ -50,6 +50,10 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float suspiciousOpenDoorSightDistance = 8f;
     [SerializeField] private float suspiciousOpenDoorInvestigationDuration = 5f;
     [SerializeField] private float suspiciousOpenDoorRecheckDelay = 12f;
+    [SerializeField] private float windowBreakDistance = 1.5f;
+    [SerializeField] private float windowBreakRadius = 0.4f;
+    [SerializeField] private LayerMask windowBreakMask = ~0;
+    [SerializeField] private float windowBreakCooldown = 0.75f;
 
     [Header("Traps")]
     [SerializeField] private float trapCheckRadius = 0.65f;
@@ -57,6 +61,9 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private LayerMask trapCheckMask = ~0;
     [SerializeField] private float trapAvoidanceRadius = 1.4f;
     [SerializeField] private float trapAvoidanceDestinationSearchRadius = 3f;
+    [SerializeField] private float trapAvoidanceWaypointDistance = 2.4f;
+    [SerializeField] private float trapAvoidanceWaypointReachDistance = 0.8f;
+    [SerializeField] private float trapAvoidanceTimeout = 3f;
 
     [Header("Audio")]
     [SerializeField] private AudioSource footstepAudioSource;
@@ -94,6 +101,7 @@ public class VisitorAI : MonoBehaviour
     private float lastSawPlayerTime = -999f;
     private float playerVisibleSinceTime = -999f;
     private float lastDoorOpenTime = -999f;
+    private float lastWindowBreakTime = -999f;
     private Vector3 spawnPosition;
     private Vector3 fallbackRoamDestination;
     private Vector3 currentSearchDestination;
@@ -114,6 +122,10 @@ public class VisitorAI : MonoBehaviour
     private float suspiciousOpenDoorInvestigationEndTime = -999f;
     private readonly HashSet<DoorInteractable> doorsOpenedByVisitor = new HashSet<DoorInteractable>();
     private readonly Dictionary<DoorInteractable, float> suspiciousOpenDoorIgnoreUntil = new Dictionary<DoorInteractable, float>();
+    private Vector3 trapAvoidanceFinalDestination;
+    private Vector3 trapAvoidanceWaypoint;
+    private float trapAvoidanceEndTime = -999f;
+    private bool hasTrapAvoidanceWaypoint;
     private float defaultStoppingDistance;
     private float defaultAcceleration;
     private float defaultAngularSpeed;
@@ -226,6 +238,7 @@ public class VisitorAI : MonoBehaviour
         }
 
         TryOpenDoorAhead();
+        TryBreakWindowAhead();
         RecoverIfStuck();
         UpdateLoopingAudio();
     }
@@ -334,7 +347,7 @@ public class VisitorAI : MonoBehaviour
             agent.isStopped = false;
             ApplyDefaultMovementSettings();
             agent.speed = chaseSpeed;
-            noiseInvestigationDestination = SetTrapAwareDestination(noiseInvestigationDestination);
+            SetTrapAwareDestination(noiseInvestigationDestination);
         }
 
         if (!wasAlreadyInvestigatingNoise)
@@ -520,7 +533,7 @@ public class VisitorAI : MonoBehaviour
             if (TryFindReachableNavMeshPointNear(noiseInvestigationPosition, noiseReachableSearchRadius, out noiseInvestigationDestination))
             {
                 hasNoiseInvestigationDestination = true;
-                noiseInvestigationDestination = SetTrapAwareDestination(noiseInvestigationDestination);
+                SetTrapAwareDestination(noiseInvestigationDestination);
             }
             else
             {
@@ -562,7 +575,7 @@ public class VisitorAI : MonoBehaviour
         agent.isStopped = false;
         ApplyDefaultMovementSettings();
         agent.speed = chaseSpeed;
-        suspiciousOpenDoorDestination = SetTrapAwareDestination(suspiciousOpenDoorDestination);
+        SetTrapAwareDestination(suspiciousOpenDoorDestination);
         return true;
     }
 
@@ -585,7 +598,7 @@ public class VisitorAI : MonoBehaviour
 
         if (!agent.hasPath)
         {
-            suspiciousOpenDoorDestination = SetTrapAwareDestination(suspiciousOpenDoorDestination);
+            SetTrapAwareDestination(suspiciousOpenDoorDestination);
         }
 
         if (Vector3.Distance(currentPosition, targetPosition) <= searchPointReachDistance || Time.time > suspiciousOpenDoorInvestigationEndTime)
@@ -737,7 +750,7 @@ public class VisitorAI : MonoBehaviour
         {
             currentSearchDestination = hit.position;
             hasSearchDestination = true;
-            currentSearchDestination = SetTrapAwareDestination(currentSearchDestination);
+            SetTrapAwareDestination(currentSearchDestination);
         }
         else
         {
@@ -763,7 +776,7 @@ public class VisitorAI : MonoBehaviour
             {
                 hasFallbackRoamDestination = true;
                 waitTimer = 0f;
-                fallbackRoamDestination = SetTrapAwareDestination(fallbackRoamDestination);
+                SetTrapAwareDestination(fallbackRoamDestination);
             }
         }
     }
@@ -785,7 +798,7 @@ public class VisitorAI : MonoBehaviour
         return false;
     }
 
-    private Vector3 SetTrapAwareDestination(Vector3 destination)
+    private void SetTrapAwareDestination(Vector3 destination)
     {
         if (!TryGetTrapAwareDestination(destination, out Vector3 adjustedDestination))
         {
@@ -793,12 +806,19 @@ public class VisitorAI : MonoBehaviour
         }
 
         agent.SetDestination(adjustedDestination);
-        return adjustedDestination;
     }
 
     private bool TryGetTrapAwareDestination(Vector3 destination, out Vector3 adjustedDestination)
     {
         adjustedDestination = destination;
+
+        if (HasActiveTrapAvoidanceWaypoint(destination))
+        {
+            adjustedDestination = trapAvoidanceWaypoint;
+            return true;
+        }
+
+        hasTrapAvoidanceWaypoint = false;
 
         if (trapAvoidanceRadius <= 0f || !HasActiveBeartraps())
         {
@@ -813,6 +833,16 @@ public class VisitorAI : MonoBehaviour
 
         if (!PathPassesNearActiveBeartrap(path))
         {
+            return true;
+        }
+
+        if (TryFindTrapAvoidanceWaypoint(path, destination, out Vector3 waypoint))
+        {
+            trapAvoidanceFinalDestination = destination;
+            trapAvoidanceWaypoint = waypoint;
+            trapAvoidanceEndTime = Time.time + trapAvoidanceTimeout;
+            hasTrapAvoidanceWaypoint = true;
+            adjustedDestination = trapAvoidanceWaypoint;
             return true;
         }
 
@@ -857,6 +887,150 @@ public class VisitorAI : MonoBehaviour
 
         adjustedDestination = bestAlternative;
         return true;
+    }
+
+    private bool HasActiveTrapAvoidanceWaypoint(Vector3 destination)
+    {
+        if (!hasTrapAvoidanceWaypoint)
+        {
+            return false;
+        }
+
+        Vector3 currentPosition = transform.position;
+        Vector3 waypoint = trapAvoidanceWaypoint;
+        currentPosition.y = 0f;
+        waypoint.y = 0f;
+
+        if (Time.time > trapAvoidanceEndTime || Vector3.Distance(currentPosition, waypoint) <= trapAvoidanceWaypointReachDistance)
+        {
+            hasTrapAvoidanceWaypoint = false;
+            return false;
+        }
+
+        Vector3 finalDestination = trapAvoidanceFinalDestination;
+        finalDestination.y = 0f;
+        destination.y = 0f;
+        return Vector3.Distance(finalDestination, destination) <= trapAvoidanceDestinationSearchRadius;
+    }
+
+    private bool TryFindTrapAvoidanceWaypoint(NavMeshPath path, Vector3 destination, out Vector3 waypoint)
+    {
+        waypoint = destination;
+
+        if (!TryFindFirstTrapOnPath(path, out BeartrapTrap trap, out Vector3 segmentStart, out Vector3 segmentEnd))
+        {
+            return false;
+        }
+
+        Vector3 segmentDirection = segmentEnd - segmentStart;
+        segmentDirection.y = 0f;
+        if (segmentDirection.sqrMagnitude <= 0.0001f)
+        {
+            segmentDirection = destination - transform.position;
+            segmentDirection.y = 0f;
+        }
+
+        if (segmentDirection.sqrMagnitude <= 0.0001f)
+        {
+            return false;
+        }
+
+        segmentDirection.Normalize();
+        Vector3 side = new Vector3(-segmentDirection.z, 0f, segmentDirection.x);
+        Vector3 trapPosition = trap.transform.position;
+        Vector3[] candidates =
+        {
+            trapPosition + side * trapAvoidanceWaypointDistance,
+            trapPosition - side * trapAvoidanceWaypointDistance,
+            trapPosition + side * (trapAvoidanceWaypointDistance * 1.5f),
+            trapPosition - side * (trapAvoidanceWaypointDistance * 1.5f)
+        };
+
+        NavMeshPath candidatePath = new NavMeshPath();
+        float bestScore = float.PositiveInfinity;
+        bool hasCandidate = false;
+
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            if (!NavMesh.SamplePosition(candidates[i], out NavMeshHit hit, trapAvoidanceWaypointDistance, NavMesh.AllAreas))
+            {
+                continue;
+            }
+
+            if (Vector3.Distance(hit.position, trapPosition) <= trapAvoidanceRadius)
+            {
+                continue;
+            }
+
+            if (!agent.CalculatePath(hit.position, candidatePath) || candidatePath.status != NavMeshPathStatus.PathComplete || PathPassesNearActiveBeartrap(candidatePath))
+            {
+                continue;
+            }
+
+            float distanceToCurrent = Vector3.SqrMagnitude(hit.position - transform.position);
+            float distanceToFinal = Vector3.SqrMagnitude(hit.position - destination);
+            float score = distanceToCurrent + distanceToFinal * 0.25f;
+            if (score < bestScore)
+            {
+                hasCandidate = true;
+                bestScore = score;
+                waypoint = hit.position;
+            }
+        }
+
+        return hasCandidate;
+    }
+
+    private bool TryFindFirstTrapOnPath(NavMeshPath path, out BeartrapTrap foundTrap, out Vector3 segmentStart, out Vector3 segmentEnd)
+    {
+        foundTrap = null;
+        segmentStart = transform.position;
+        segmentEnd = transform.position;
+
+        if (path == null || path.corners == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<BeartrapTrap> traps = BeartrapTrap.ActiveTraps;
+        float avoidanceRadiusSquared = trapAvoidanceRadius * trapAvoidanceRadius;
+        float bestDistanceFromStart = float.PositiveInfinity;
+
+        for (int trapIndex = 0; trapIndex < traps.Count; trapIndex++)
+        {
+            BeartrapTrap trap = traps[trapIndex];
+            if (trap == null || trap.IsTriggered)
+            {
+                continue;
+            }
+
+            Vector3 trapPosition = trap.transform.position;
+            for (int cornerIndex = 0; cornerIndex < path.corners.Length - 1; cornerIndex++)
+            {
+                Vector3 start = path.corners[cornerIndex];
+                Vector3 end = path.corners[cornerIndex + 1];
+                if (Mathf.Abs(trapPosition.y - start.y) > trapCheckVerticalTolerance && Mathf.Abs(trapPosition.y - end.y) > trapCheckVerticalTolerance)
+                {
+                    continue;
+                }
+
+                if (DistanceToSegmentSquared2D(trapPosition, start, end) > avoidanceRadiusSquared)
+                {
+                    continue;
+                }
+
+                float distanceFromStart = Vector3.SqrMagnitude(start - transform.position);
+                if (distanceFromStart < bestDistanceFromStart)
+                {
+                    bestDistanceFromStart = distanceFromStart;
+                    foundTrap = trap;
+                    segmentStart = start;
+                    segmentEnd = end;
+                }
+            }
+        }
+
+        return foundTrap != null;
     }
 
     private bool HasActiveBeartraps()
@@ -1096,6 +1270,29 @@ public class VisitorAI : MonoBehaviour
         doorsOpenedByVisitor.Add(door);
         door.Open(this);
         lastDoorOpenTime = Time.time;
+    }
+
+    private void TryBreakWindowAhead()
+    {
+        if (!wasChasingPlayer || Time.time - lastWindowBreakTime < windowBreakCooldown)
+        {
+            return;
+        }
+
+        Vector3 origin = transform.position + Vector3.up * eyeHeight;
+        if (!Physics.SphereCast(origin, windowBreakRadius, transform.forward, out RaycastHit hit, windowBreakDistance, windowBreakMask, QueryTriggerInteraction.Collide))
+        {
+            return;
+        }
+
+        BreakableWindowInteractable window = hit.collider.GetComponentInParent<BreakableWindowInteractable>();
+        if (window == null || window.IsBroken)
+        {
+            return;
+        }
+
+        window.BreakWindow();
+        lastWindowBreakTime = Time.time;
     }
 
     private DoorInteractable FindVisibleSuspiciousOpenDoor()
@@ -1471,10 +1668,16 @@ public class VisitorAI : MonoBehaviour
         suspiciousOpenDoorSightDistance = Mathf.Max(0f, suspiciousOpenDoorSightDistance);
         suspiciousOpenDoorInvestigationDuration = Mathf.Max(0f, suspiciousOpenDoorInvestigationDuration);
         suspiciousOpenDoorRecheckDelay = Mathf.Max(0f, suspiciousOpenDoorRecheckDelay);
+        windowBreakDistance = Mathf.Max(0f, windowBreakDistance);
+        windowBreakRadius = Mathf.Max(0.01f, windowBreakRadius);
+        windowBreakCooldown = Mathf.Max(0f, windowBreakCooldown);
         trapCheckRadius = Mathf.Max(0.01f, trapCheckRadius);
         trapCheckVerticalTolerance = Mathf.Max(0f, trapCheckVerticalTolerance);
         trapAvoidanceRadius = Mathf.Max(0f, trapAvoidanceRadius);
         trapAvoidanceDestinationSearchRadius = Mathf.Max(0f, trapAvoidanceDestinationSearchRadius);
+        trapAvoidanceWaypointDistance = Mathf.Max(0f, trapAvoidanceWaypointDistance);
+        trapAvoidanceWaypointReachDistance = Mathf.Max(0.01f, trapAvoidanceWaypointReachDistance);
+        trapAvoidanceTimeout = Mathf.Max(0f, trapAvoidanceTimeout);
         footstepMinDistance = Mathf.Max(0f, footstepMinDistance);
         footstepMaxDistance = Mathf.Max(footstepMinDistance, footstepMaxDistance);
         footstepSpeedThreshold = Mathf.Max(0f, footstepSpeedThreshold);

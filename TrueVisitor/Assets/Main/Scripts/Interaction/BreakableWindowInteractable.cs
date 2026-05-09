@@ -16,6 +16,8 @@ public class BreakableWindowInteractable : MonoBehaviour, IInteractable
 
     private bool broken;
 
+    public bool IsBroken => broken;
+
     private void Awake()
     {
         if (windowCollider == null)
@@ -39,6 +41,11 @@ public class BreakableWindowInteractable : MonoBehaviour, IInteractable
 
     public void BreakWindow()
     {
+        if (broken && canBreakOnlyOnce)
+        {
+            return;
+        }
+
         broken = true;
         ApplyVisualState();
         PlayBreakSound();
