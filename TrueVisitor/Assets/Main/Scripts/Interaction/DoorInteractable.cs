@@ -53,20 +53,25 @@ public class DoorInteractable : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        SetOpen(!isOpen);
+        SetOpen(!isOpen, null);
     }
 
     public void Open()
     {
-        SetOpen(true);
+        SetOpen(true, null);
+    }
+
+    public void Open(VisitorAI opener)
+    {
+        SetOpen(true, opener);
     }
 
     public void Close()
     {
-        SetOpen(false);
+        SetOpen(false, null);
     }
 
-    private void SetOpen(bool open)
+    private void SetOpen(bool open, VisitorAI alertVisitorToIgnore)
     {
         if (isOpen == open)
         {
@@ -78,13 +83,13 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         if (isOpen)
         {
             PlaySound(openClip);
-            AlertVisitors();
+            AlertVisitors(alertVisitorToIgnore);
             onOpened?.Invoke();
         }
         else
         {
             PlaySound(closeClip);
-            AlertVisitors();
+            AlertVisitors(alertVisitorToIgnore);
             onClosed?.Invoke();
         }
     }
@@ -116,7 +121,7 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         audioSource.PlayOneShot(clip);
     }
 
-    private void AlertVisitors()
+    private void AlertVisitors(VisitorAI visitorToIgnore)
     {
         if (visitorAlertDistance <= 0f || visitorAlertDuration <= 0f)
         {
@@ -130,6 +135,11 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         {
             VisitorAI visitor = visitors[i];
             if (visitor == null)
+            {
+                continue;
+            }
+
+            if (visitor == visitorToIgnore)
             {
                 continue;
             }

@@ -41,6 +41,9 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float doorCheckRadius = 0.35f;
     [SerializeField] private LayerMask doorCheckMask = ~0;
     [SerializeField] private float doorOpenCooldown = 0.5f;
+    [SerializeField] private float suspiciousOpenDoorSightDistance = 8f;
+    [SerializeField] private float suspiciousOpenDoorInvestigationDuration = 5f;
+    [SerializeField] private float suspiciousOpenDoorRecheckDelay = 12f;
 
     [Header("Traps")]
     [SerializeField] private float trapCheckRadius = 0.65f;
@@ -97,6 +100,11 @@ public class VisitorAI : MonoBehaviour
     private bool sceneResetTriggered;
     private bool wasChasingPlayer;
     private float noiseInvestigationEndTime = -999f;
+    private DoorInteractable suspiciousOpenDoor;
+    private Vector3 suspiciousOpenDoorDestination;
+    private float suspiciousOpenDoorInvestigationEndTime = -999f;
+    private readonly HashSet<DoorInteractable> doorsOpenedByVisitor = new HashSet<DoorInteractable>();
+    private readonly Dictionary<DoorInteractable, float> suspiciousOpenDoorIgnoreUntil = new Dictionary<DoorInteractable, float>();
     private float defaultStoppingDistance;
     private float defaultAcceleration;
     private float defaultAngularSpeed;
@@ -182,6 +190,14 @@ public class VisitorAI : MonoBehaviour
         else if (IsInvestigatingNoise())
         {
             InvestigateNoise();
+        }
+        else if (IsInvestigatingSuspiciousOpenDoor())
+        {
+            InvestigateSuspiciousOpenDoor();
+        }
+        else if (TryStartSuspiciousOpenDoorInvestigation())
+        {
+            InvestigateSuspiciousOpenDoor();
         }
         else
         {
@@ -421,6 +437,11 @@ public class VisitorAI : MonoBehaviour
         return Time.time <= noiseInvestigationEndTime;
     }
 
+    private bool IsInvestigatingSuspiciousOpenDoor()
+    {
+        return suspiciousOpenDoor != null && Time.time <= suspiciousOpenDoorInvestigationEndTime;
+    }
+
     private void InvestigateNoise()
     {
         agent.isStopped = false;
@@ -450,6 +471,61 @@ public class VisitorAI : MonoBehaviour
         {
             noiseInvestigationEndTime = Time.time;
             hasNoiseInvestigationDestination = false;
+        }
+    }
+
+    private bool TryStartSuspiciousOpenDoorInvestigation()
+    {
+        DoorInteractable door = FindVisibleSuspiciousOpenDoor();
+        if (door == null)
+        {
+            return false;
+        }
+
+        if (!TryFindReachableNavMeshPointNear(door.transform.position, noiseReachableSearchRadius, out suspiciousOpenDoorDestination))
+        {
+            suspiciousOpenDoorIgnoreUntil[door] = Time.time + suspiciousOpenDoorRecheckDelay;
+            return false;
+        }
+
+        suspiciousOpenDoor = door;
+        suspiciousOpenDoorInvestigationEndTime = Time.time + suspiciousOpenDoorInvestigationDuration;
+        hasSearchDestination = false;
+        hasFallbackRoamDestination = false;
+        agent.isStopped = false;
+        ApplyDefaultMovementSettings();
+        agent.speed = chaseSpeed;
+        agent.SetDestination(suspiciousOpenDoorDestination);
+        return true;
+    }
+
+    private void InvestigateSuspiciousOpenDoor()
+    {
+        if (suspiciousOpenDoor == null)
+        {
+            suspiciousOpenDoorInvestigationEndTime = Time.time;
+            return;
+        }
+
+        agent.isStopped = false;
+        ApplyDefaultMovementSettings();
+        agent.speed = chaseSpeed;
+
+        Vector3 currentPosition = transform.position;
+        Vector3 targetPosition = suspiciousOpenDoorDestination;
+        currentPosition.y = 0f;
+        targetPosition.y = 0f;
+
+        if (!agent.hasPath)
+        {
+            agent.SetDestination(suspiciousOpenDoorDestination);
+        }
+
+        if (Vector3.Distance(currentPosition, targetPosition) <= searchPointReachDistance || Time.time > suspiciousOpenDoorInvestigationEndTime)
+        {
+            suspiciousOpenDoorIgnoreUntil[suspiciousOpenDoor] = Time.time + suspiciousOpenDoorRecheckDelay;
+            suspiciousOpenDoor = null;
+            suspiciousOpenDoorInvestigationEndTime = Time.time;
         }
     }
 
@@ -797,8 +873,31 @@ public class VisitorAI : MonoBehaviour
             return;
         }
 
-        door.Open();
+        doorsOpenedByVisitor.Add(door);
+        door.Open(this);
         lastDoorOpenTime = Time.time;
+    }
+
+    private DoorInteractable FindVisibleSuspiciousOpenDoor()
+    {
+        Vector3 origin = transform.position + Vector3.up * eyeHeight;
+        if (!Physics.SphereCast(origin, doorCheckRadius, transform.forward, out RaycastHit hit, suspiciousOpenDoorSightDistance, doorCheckMask, QueryTriggerInteraction.Collide))
+        {
+            return null;
+        }
+
+        DoorInteractable door = hit.collider.GetComponentInParent<DoorInteractable>();
+        if (door == null || !door.IsOpen || doorsOpenedByVisitor.Contains(door))
+        {
+            return null;
+        }
+
+        if (suspiciousOpenDoorIgnoreUntil.TryGetValue(door, out float ignoreUntil) && Time.time < ignoreUntil)
+        {
+            return null;
+        }
+
+        return door;
     }
 
     private void RecoverIfStuck()
@@ -1143,6 +1242,9 @@ public class VisitorAI : MonoBehaviour
         doorCheckDistance = Mathf.Max(0f, doorCheckDistance);
         doorCheckRadius = Mathf.Max(0.01f, doorCheckRadius);
         doorOpenCooldown = Mathf.Max(0f, doorOpenCooldown);
+        suspiciousOpenDoorSightDistance = Mathf.Max(0f, suspiciousOpenDoorSightDistance);
+        suspiciousOpenDoorInvestigationDuration = Mathf.Max(0f, suspiciousOpenDoorInvestigationDuration);
+        suspiciousOpenDoorRecheckDelay = Mathf.Max(0f, suspiciousOpenDoorRecheckDelay);
         trapCheckRadius = Mathf.Max(0.01f, trapCheckRadius);
         trapCheckVerticalTolerance = Mathf.Max(0f, trapCheckVerticalTolerance);
         footstepMinDistance = Mathf.Max(0f, footstepMinDistance);
