@@ -8564,12 +8564,20 @@ PrefabInstance:
       value: InteractionTestDoor
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.6925946
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.4782653
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.823
+      value: -0.87254
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.64
+      value: 0.7064
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.z
@@ -153435,12 +153443,16 @@ PrefabInstance:
       value: -95
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5495465
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.69
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.65
+      value: 0.75764
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: f66d90a018d54241b9cd21ff8bc72080, type: 3}
       propertyPath: m_LocalPosition.z

@@ -16,6 +16,7 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     [SerializeField] private string pickupItemId = "beartrap";
     [SerializeField] private string pickupDisplayName = "Beartrap";
     [SerializeField] private int pickupQuantity = 1;
+    [SerializeField] private int maxTriggerUses = 2;
     [SerializeField] private string pickupLayerName = "Interact";
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip snapClip;
@@ -26,6 +27,7 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     private static AudioClip generatedSnapClip;
     private BoxCollider triggerCollider;
     private bool triggered;
+    private int triggerUseCount;
     private int defaultLayer;
     private int pickupLayer = -1;
 
@@ -67,6 +69,11 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         }
     }
 
+    public void PlayHitSound()
+    {
+        PlaySnapSound();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (triggered)
@@ -102,23 +109,37 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
     private void Trigger(PlayerController player)
     {
         triggered = true;
+        triggerUseCount++;
         SetVisualState(false);
-        SetPickupInteractable(true);
 
         player.LockMovementForSeconds(trapDuration);
         PlaySnapSound();
         onTriggered?.Invoke();
+        FinishTriggeredUse();
     }
 
     private void Trigger(VisitorAI visitor)
     {
         triggered = true;
+        triggerUseCount++;
         SetVisualState(false);
-        SetPickupInteractable(true);
 
         visitor.TrapForSeconds(trapDuration, transform.position);
         PlaySnapSound();
         onTriggered?.Invoke();
+        FinishTriggeredUse();
+    }
+
+    private void FinishTriggeredUse()
+    {
+        if (triggerUseCount >= maxTriggerUses)
+        {
+            SetPickupInteractable(false);
+            Destroy(gameObject, trapDuration);
+            return;
+        }
+
+        SetPickupInteractable(true);
     }
 
     public void Interact()
@@ -275,6 +296,7 @@ public class BeartrapTrap : MonoBehaviour, IInteractable
         triggerSize.z = Mathf.Max(0.1f, triggerSize.z);
         trapDuration = Mathf.Max(0f, trapDuration);
         pickupQuantity = Mathf.Max(1, pickupQuantity);
+        maxTriggerUses = Mathf.Max(1, maxTriggerUses);
         snapPitchRange.x = Mathf.Max(0.01f, snapPitchRange.x);
         snapPitchRange.y = Mathf.Max(snapPitchRange.x, snapPitchRange.y);
 

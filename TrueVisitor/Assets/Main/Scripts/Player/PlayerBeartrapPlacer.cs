@@ -117,6 +117,7 @@ public class PlayerBeartrapPlacer : MonoBehaviour
         if (trap != null)
         {
             trap.InitializeOpen();
+            trap.PlayHitSound();
         }
 
         if (inventory.GetQuantity(itemId) <= 0)

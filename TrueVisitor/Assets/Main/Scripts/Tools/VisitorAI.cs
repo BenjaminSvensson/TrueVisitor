@@ -22,6 +22,9 @@ public class VisitorAI : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float searchSpeed = 2.2f;
     [SerializeField] private float chaseSpeed = 4.2f;
+    [SerializeField] private float chaseStoppingDistance = 1.1f;
+    [SerializeField] private float chaseAcceleration = 18f;
+    [SerializeField] private float chaseAngularSpeed = 720f;
     [SerializeField] private float searchPointReachDistance = 1.2f;
     [SerializeField] private float searchPointWaitTime = 1f;
     [SerializeField] private float navMeshSnapDistance = 4f;
@@ -91,10 +94,15 @@ public class VisitorAI : MonoBehaviour
     private bool sceneResetTriggered;
     private bool wasChasingPlayer;
     private float noiseInvestigationEndTime = -999f;
+    private float defaultStoppingDistance;
+    private float defaultAcceleration;
+    private float defaultAngularSpeed;
+    private bool defaultAutoBraking;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        CacheAgentMovementSettings();
         spawnPosition = transform.position;
         lastPosition = transform.position;
 
@@ -381,6 +389,7 @@ public class VisitorAI : MonoBehaviour
     private void ChasePlayer()
     {
         agent.isStopped = false;
+        ApplyChaseMovementSettings();
         agent.speed = chaseSpeed;
         if (NavMesh.SamplePosition(player.position, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
         {
@@ -396,6 +405,7 @@ public class VisitorAI : MonoBehaviour
     private void InvestigateNoise()
     {
         agent.isStopped = false;
+        ApplyDefaultMovementSettings();
         agent.speed = chaseSpeed;
 
         if (NavMesh.SamplePosition(noiseInvestigationPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
@@ -430,6 +440,7 @@ public class VisitorAI : MonoBehaviour
         }
 
         agent.isStopped = false;
+        ApplyDefaultMovementSettings();
         agent.speed = searchSpeed;
         SetSearchDestination(target.position);
 
@@ -565,6 +576,7 @@ public class VisitorAI : MonoBehaviour
     private void FallbackRoam()
     {
         agent.isStopped = false;
+        ApplyDefaultMovementSettings();
         agent.speed = searchSpeed;
 
         if (!hasFallbackRoamDestination || (!agent.pathPending && agent.remainingDistance <= searchPointReachDistance))
@@ -604,6 +616,35 @@ public class VisitorAI : MonoBehaviour
     private bool IsAgentReady()
     {
         return agent != null && agent.enabled && agent.isOnNavMesh;
+    }
+
+    private void CacheAgentMovementSettings()
+    {
+        if (agent == null)
+        {
+            return;
+        }
+
+        defaultStoppingDistance = agent.stoppingDistance;
+        defaultAcceleration = agent.acceleration;
+        defaultAngularSpeed = agent.angularSpeed;
+        defaultAutoBraking = agent.autoBraking;
+    }
+
+    private void ApplyChaseMovementSettings()
+    {
+        agent.stoppingDistance = chaseStoppingDistance;
+        agent.acceleration = chaseAcceleration;
+        agent.angularSpeed = chaseAngularSpeed;
+        agent.autoBraking = true;
+    }
+
+    private void ApplyDefaultMovementSettings()
+    {
+        agent.stoppingDistance = defaultStoppingDistance;
+        agent.acceleration = defaultAcceleration;
+        agent.angularSpeed = defaultAngularSpeed;
+        agent.autoBraking = defaultAutoBraking;
     }
 
     private void TryPlaceOnNavMesh()
@@ -969,6 +1010,9 @@ public class VisitorAI : MonoBehaviour
         losePlayerAfter = Mathf.Max(0f, losePlayerAfter);
         searchSpeed = Mathf.Max(0f, searchSpeed);
         chaseSpeed = Mathf.Max(0f, chaseSpeed);
+        chaseStoppingDistance = Mathf.Max(0f, chaseStoppingDistance);
+        chaseAcceleration = Mathf.Max(0.01f, chaseAcceleration);
+        chaseAngularSpeed = Mathf.Max(0f, chaseAngularSpeed);
         searchPointReachDistance = Mathf.Max(0.1f, searchPointReachDistance);
         searchPointWaitTime = Mathf.Max(0f, searchPointWaitTime);
         navMeshSnapDistance = Mathf.Max(0f, navMeshSnapDistance);
