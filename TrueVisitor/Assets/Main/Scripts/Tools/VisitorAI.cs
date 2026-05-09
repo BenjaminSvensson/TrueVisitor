@@ -17,6 +17,7 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float fieldOfView = 115f;
     [SerializeField] private float eyeHeight = 1.6f;
     [SerializeField] private LayerMask lineOfSightMask = ~0;
+    [SerializeField] private float spotPlayerDelay = 0.45f;
     [SerializeField] private float losePlayerAfter = 3f;
 
     [Header("Movement")]
@@ -87,6 +88,7 @@ public class VisitorAI : MonoBehaviour
     private int[] searchOrder;
     private float waitTimer;
     private float lastSawPlayerTime = -999f;
+    private float playerVisibleSinceTime = -999f;
     private float lastDoorOpenTime = -999f;
     private Vector3 spawnPosition;
     private Vector3 fallbackRoamDestination;
@@ -175,7 +177,19 @@ public class VisitorAI : MonoBehaviour
         bool canSeePlayer = CanSeePlayer();
         if (canSeePlayer)
         {
-            lastSawPlayerTime = Time.time;
+            if (playerVisibleSinceTime < 0f)
+            {
+                playerVisibleSinceTime = Time.time;
+            }
+
+            if (wasChasingPlayer || Time.time - playerVisibleSinceTime >= spotPlayerDelay)
+            {
+                lastSawPlayerTime = Time.time;
+            }
+        }
+        else
+        {
+            playerVisibleSinceTime = -999f;
         }
 
         bool shouldChase = player != null && Time.time - lastSawPlayerTime <= losePlayerAfter;
@@ -224,7 +238,7 @@ public class VisitorAI : MonoBehaviour
 
     private void TryResetSceneFromContact(Collider other)
     {
-        if (sceneResetTriggered || other == null)
+        if (sceneResetTriggered || other == null || !wasChasingPlayer)
         {
             return;
         }
@@ -239,7 +253,7 @@ public class VisitorAI : MonoBehaviour
 
     private void TryResetSceneFromPlayerProximity()
     {
-        if (sceneResetTriggered || player == null)
+        if (sceneResetTriggered || player == null || !wasChasingPlayer)
         {
             return;
         }
@@ -1384,6 +1398,7 @@ public class VisitorAI : MonoBehaviour
         sightRange = Mathf.Max(0f, sightRange);
         fieldOfView = Mathf.Clamp(fieldOfView, 0f, 360f);
         eyeHeight = Mathf.Max(0f, eyeHeight);
+        spotPlayerDelay = Mathf.Max(0f, spotPlayerDelay);
         losePlayerAfter = Mathf.Max(0f, losePlayerAfter);
         searchSpeed = Mathf.Max(0f, searchSpeed);
         chaseSpeed = Mathf.Max(0f, chaseSpeed);
