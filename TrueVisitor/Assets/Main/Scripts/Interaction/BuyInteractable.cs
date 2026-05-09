@@ -14,6 +14,7 @@ public class BuyInteractable : MonoBehaviour, IInteractable
     [SerializeField] private UnityEvent onPurchased;
     [SerializeField] private UnityEvent onCannotAfford;
     [SerializeField] private UnityEvent onAlreadyPurchased;
+    [SerializeField] private AudioSource purchaseSound;
 
     private bool purchased;
 
@@ -41,6 +42,7 @@ public class BuyInteractable : MonoBehaviour, IInteractable
         if (addItemToInventory)
         {
             inventory.AddItem(itemId, displayName, quantity);
+            purchaseSound?.Play();
         }
 
         purchased = true;

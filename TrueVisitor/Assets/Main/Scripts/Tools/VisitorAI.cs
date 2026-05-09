@@ -31,6 +31,7 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float fallbackRoamRadius = 8f;
     [SerializeField] private float fallbackRoamWaitTime = 1.5f;
     [SerializeField] private float playerContactResetDistance = 1.6f;
+    [SerializeField] private float playerContactVerticalTolerance = 1.4f;
     [SerializeField] private float stuckVelocityThreshold = 0.05f;
     [SerializeField] private float stuckRecoveryDelay = 2f;
     [SerializeField] private float noiseInvestigateDuration = 6f;
@@ -49,6 +50,8 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float trapCheckRadius = 0.65f;
     [SerializeField] private float trapCheckVerticalTolerance = 1.2f;
     [SerializeField] private LayerMask trapCheckMask = ~0;
+    [SerializeField] private float trapAvoidanceRadius = 1.4f;
+    [SerializeField] private float trapAvoidanceDestinationSearchRadius = 3f;
 
     [Header("Audio")]
     [SerializeField] private AudioSource footstepAudioSource;
@@ -243,6 +246,11 @@ public class VisitorAI : MonoBehaviour
 
         Vector3 visitorPosition = transform.position;
         Vector3 playerPosition = player.position;
+        if (Mathf.Abs(visitorPosition.y - playerPosition.y) > playerContactVerticalTolerance)
+        {
+            return;
+        }
+
         visitorPosition.y = 0f;
         playerPosition.y = 0f;
 
@@ -308,7 +316,7 @@ public class VisitorAI : MonoBehaviour
             agent.isStopped = false;
             ApplyDefaultMovementSettings();
             agent.speed = chaseSpeed;
-            agent.SetDestination(noiseInvestigationDestination);
+            noiseInvestigationDestination = SetTrapAwareDestination(noiseInvestigationDestination);
         }
 
         if (!wasAlreadyInvestigatingNoise)
@@ -428,7 +436,7 @@ public class VisitorAI : MonoBehaviour
         agent.speed = chaseSpeed;
         if (NavMesh.SamplePosition(player.position, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
         {
-            agent.SetDestination(hit.position);
+            SetTrapAwareDestination(hit.position);
         }
     }
 
@@ -453,7 +461,7 @@ public class VisitorAI : MonoBehaviour
             if (TryFindReachableNavMeshPointNear(noiseInvestigationPosition, noiseReachableSearchRadius, out noiseInvestigationDestination))
             {
                 hasNoiseInvestigationDestination = true;
-                agent.SetDestination(noiseInvestigationDestination);
+                noiseInvestigationDestination = SetTrapAwareDestination(noiseInvestigationDestination);
             }
             else
             {
@@ -495,7 +503,7 @@ public class VisitorAI : MonoBehaviour
         agent.isStopped = false;
         ApplyDefaultMovementSettings();
         agent.speed = chaseSpeed;
-        agent.SetDestination(suspiciousOpenDoorDestination);
+        suspiciousOpenDoorDestination = SetTrapAwareDestination(suspiciousOpenDoorDestination);
         return true;
     }
 
@@ -518,7 +526,7 @@ public class VisitorAI : MonoBehaviour
 
         if (!agent.hasPath)
         {
-            agent.SetDestination(suspiciousOpenDoorDestination);
+            suspiciousOpenDoorDestination = SetTrapAwareDestination(suspiciousOpenDoorDestination);
         }
 
         if (Vector3.Distance(currentPosition, targetPosition) <= searchPointReachDistance || Time.time > suspiciousOpenDoorInvestigationEndTime)
@@ -670,7 +678,7 @@ public class VisitorAI : MonoBehaviour
         {
             currentSearchDestination = hit.position;
             hasSearchDestination = true;
-            agent.SetDestination(currentSearchDestination);
+            currentSearchDestination = SetTrapAwareDestination(currentSearchDestination);
         }
         else
         {
@@ -696,7 +704,7 @@ public class VisitorAI : MonoBehaviour
             {
                 hasFallbackRoamDestination = true;
                 waitTimer = 0f;
-                agent.SetDestination(fallbackRoamDestination);
+                fallbackRoamDestination = SetTrapAwareDestination(fallbackRoamDestination);
             }
         }
     }
@@ -716,6 +724,159 @@ public class VisitorAI : MonoBehaviour
 
         point = center;
         return false;
+    }
+
+    private Vector3 SetTrapAwareDestination(Vector3 destination)
+    {
+        if (!TryGetTrapAwareDestination(destination, out Vector3 adjustedDestination))
+        {
+            adjustedDestination = destination;
+        }
+
+        agent.SetDestination(adjustedDestination);
+        return adjustedDestination;
+    }
+
+    private bool TryGetTrapAwareDestination(Vector3 destination, out Vector3 adjustedDestination)
+    {
+        adjustedDestination = destination;
+
+        if (trapAvoidanceRadius <= 0f || !HasActiveBeartraps())
+        {
+            return true;
+        }
+
+        NavMeshPath path = new NavMeshPath();
+        if (!agent.CalculatePath(destination, path))
+        {
+            return false;
+        }
+
+        if (!PathPassesNearActiveBeartrap(path))
+        {
+            return true;
+        }
+
+        bool foundCleanAlternative = false;
+        float bestDistanceToOriginal = float.PositiveInfinity;
+        Vector3 bestAlternative = destination;
+        int ringCount = 3;
+        int directionsPerRing = 12;
+        float radiusStep = Mathf.Max(0.1f, trapAvoidanceDestinationSearchRadius / ringCount);
+
+        for (int ring = 1; ring <= ringCount; ring++)
+        {
+            float radius = radiusStep * ring;
+            for (int i = 0; i < directionsPerRing; i++)
+            {
+                float angle = (Mathf.PI * 2f * i) / directionsPerRing;
+                Vector3 candidate = destination + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+                if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, radiusStep, NavMesh.AllAreas))
+                {
+                    continue;
+                }
+
+                if (!agent.CalculatePath(hit.position, path) || path.status != NavMeshPathStatus.PathComplete || PathPassesNearActiveBeartrap(path))
+                {
+                    continue;
+                }
+
+                float distanceToOriginal = Vector3.SqrMagnitude(hit.position - destination);
+                if (distanceToOriginal < bestDistanceToOriginal)
+                {
+                    foundCleanAlternative = true;
+                    bestDistanceToOriginal = distanceToOriginal;
+                    bestAlternative = hit.position;
+                }
+            }
+        }
+
+        if (!foundCleanAlternative)
+        {
+            return true;
+        }
+
+        adjustedDestination = bestAlternative;
+        return true;
+    }
+
+    private bool HasActiveBeartraps()
+    {
+        IReadOnlyList<BeartrapTrap> traps = BeartrapTrap.ActiveTraps;
+        for (int i = 0; i < traps.Count; i++)
+        {
+            BeartrapTrap trap = traps[i];
+            if (trap != null && !trap.IsTriggered)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool PathPassesNearActiveBeartrap(NavMeshPath path)
+    {
+        if (path == null || path.corners == null || path.corners.Length == 0)
+        {
+            return false;
+        }
+
+        IReadOnlyList<BeartrapTrap> traps = BeartrapTrap.ActiveTraps;
+        float avoidanceRadiusSquared = trapAvoidanceRadius * trapAvoidanceRadius;
+
+        for (int trapIndex = 0; trapIndex < traps.Count; trapIndex++)
+        {
+            BeartrapTrap trap = traps[trapIndex];
+            if (trap == null || trap.IsTriggered)
+            {
+                continue;
+            }
+
+            Vector3 trapPosition = trap.transform.position;
+            for (int cornerIndex = 0; cornerIndex < path.corners.Length; cornerIndex++)
+            {
+                Vector3 corner = path.corners[cornerIndex];
+                if (Mathf.Abs(trapPosition.y - corner.y) <= trapCheckVerticalTolerance && DistanceToSegmentSquared2D(trapPosition, corner, corner) <= avoidanceRadiusSquared)
+                {
+                    return true;
+                }
+            }
+
+            for (int cornerIndex = 0; cornerIndex < path.corners.Length - 1; cornerIndex++)
+            {
+                Vector3 start = path.corners[cornerIndex];
+                Vector3 end = path.corners[cornerIndex + 1];
+                if (Mathf.Abs(trapPosition.y - start.y) > trapCheckVerticalTolerance && Mathf.Abs(trapPosition.y - end.y) > trapCheckVerticalTolerance)
+                {
+                    continue;
+                }
+
+                if (DistanceToSegmentSquared2D(trapPosition, start, end) <= avoidanceRadiusSquared)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private float DistanceToSegmentSquared2D(Vector3 point, Vector3 segmentStart, Vector3 segmentEnd)
+    {
+        Vector2 point2D = new Vector2(point.x, point.z);
+        Vector2 start2D = new Vector2(segmentStart.x, segmentStart.z);
+        Vector2 end2D = new Vector2(segmentEnd.x, segmentEnd.z);
+        Vector2 segment = end2D - start2D;
+        float segmentLengthSquared = segment.sqrMagnitude;
+        if (segmentLengthSquared <= Mathf.Epsilon)
+        {
+            return (point2D - start2D).sqrMagnitude;
+        }
+
+        float t = Mathf.Clamp01(Vector2.Dot(point2D - start2D, segment) / segmentLengthSquared);
+        Vector2 closest = start2D + segment * t;
+        return (point2D - closest).sqrMagnitude;
     }
 
     private bool TryFindReachableNavMeshPointNear(Vector3 target, float maxRadius, out Vector3 point)
@@ -1235,6 +1396,7 @@ public class VisitorAI : MonoBehaviour
         fallbackRoamRadius = Mathf.Max(0f, fallbackRoamRadius);
         fallbackRoamWaitTime = Mathf.Max(0f, fallbackRoamWaitTime);
         playerContactResetDistance = Mathf.Max(0.01f, playerContactResetDistance);
+        playerContactVerticalTolerance = Mathf.Max(0f, playerContactVerticalTolerance);
         stuckVelocityThreshold = Mathf.Max(0f, stuckVelocityThreshold);
         stuckRecoveryDelay = Mathf.Max(0f, stuckRecoveryDelay);
         noiseInvestigateDuration = Mathf.Max(0f, noiseInvestigateDuration);
@@ -1247,6 +1409,8 @@ public class VisitorAI : MonoBehaviour
         suspiciousOpenDoorRecheckDelay = Mathf.Max(0f, suspiciousOpenDoorRecheckDelay);
         trapCheckRadius = Mathf.Max(0.01f, trapCheckRadius);
         trapCheckVerticalTolerance = Mathf.Max(0f, trapCheckVerticalTolerance);
+        trapAvoidanceRadius = Mathf.Max(0f, trapAvoidanceRadius);
+        trapAvoidanceDestinationSearchRadius = Mathf.Max(0f, trapAvoidanceDestinationSearchRadius);
         footstepMinDistance = Mathf.Max(0f, footstepMinDistance);
         footstepMaxDistance = Mathf.Max(footstepMinDistance, footstepMaxDistance);
         footstepSpeedThreshold = Mathf.Max(0f, footstepSpeedThreshold);
