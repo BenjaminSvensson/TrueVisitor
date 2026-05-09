@@ -1,4 +1,5 @@
 using TMPro;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class SurviveTimerDisplay : MonoBehaviour
@@ -7,6 +8,7 @@ public class SurviveTimerDisplay : MonoBehaviour
     [SerializeField] private float durationSeconds = 180f;
     [SerializeField] private string prefix = "Survive ";
     [SerializeField] private bool hideUntilStarted = true;
+    [SerializeField] private string finishSceneName = "Finish";
 
     private float remainingSeconds;
     private bool running;
@@ -38,6 +40,7 @@ public class SurviveTimerDisplay : MonoBehaviour
         if (remainingSeconds <= 0f)
         {
             running = false;
+            SceneManager.LoadScene(finishSceneName);
         }
     }
 
@@ -77,6 +80,11 @@ public class SurviveTimerDisplay : MonoBehaviour
         if (string.IsNullOrEmpty(prefix))
         {
             prefix = "Survive ";
+        }
+
+        if (string.IsNullOrWhiteSpace(finishSceneName))
+        {
+            finishSceneName = "Finish";
         }
     }
 }
