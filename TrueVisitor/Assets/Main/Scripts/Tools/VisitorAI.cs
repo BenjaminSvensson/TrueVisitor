@@ -64,6 +64,7 @@ public class VisitorAI : MonoBehaviour
     [SerializeField] private float trapAvoidanceWaypointDistance = 2.4f;
     [SerializeField] private float trapAvoidanceWaypointReachDistance = 0.8f;
     [SerializeField] private float trapAvoidanceTimeout = 3f;
+    [SerializeField] private float trapAvoidanceGiveUpDuration = 4f;
 
     [Header("Audio")]
     [SerializeField] private AudioSource footstepAudioSource;
@@ -125,6 +126,8 @@ public class VisitorAI : MonoBehaviour
     private Vector3 trapAvoidanceFinalDestination;
     private Vector3 trapAvoidanceWaypoint;
     private float trapAvoidanceEndTime = -999f;
+    private Vector3 trapAvoidanceGiveUpDestination;
+    private float trapAvoidanceGiveUpUntil = -999f;
     private bool hasTrapAvoidanceWaypoint;
     private float defaultStoppingDistance;
     private float defaultAcceleration;
@@ -812,6 +815,11 @@ public class VisitorAI : MonoBehaviour
     {
         adjustedDestination = destination;
 
+        if (ShouldTemporarilyIgnoreTrapAvoidance(destination))
+        {
+            return true;
+        }
+
         if (HasActiveTrapAvoidanceWaypoint(destination))
         {
             adjustedDestination = trapAvoidanceWaypoint;
@@ -889,6 +897,19 @@ public class VisitorAI : MonoBehaviour
         return true;
     }
 
+    private bool ShouldTemporarilyIgnoreTrapAvoidance(Vector3 destination)
+    {
+        if (Time.time > trapAvoidanceGiveUpUntil)
+        {
+            return false;
+        }
+
+        Vector3 giveUpDestination = trapAvoidanceGiveUpDestination;
+        giveUpDestination.y = 0f;
+        destination.y = 0f;
+        return Vector3.Distance(giveUpDestination, destination) <= trapAvoidanceDestinationSearchRadius;
+    }
+
     private bool HasActiveTrapAvoidanceWaypoint(Vector3 destination)
     {
         if (!hasTrapAvoidanceWaypoint)
@@ -903,6 +924,8 @@ public class VisitorAI : MonoBehaviour
 
         if (Time.time > trapAvoidanceEndTime || Vector3.Distance(currentPosition, waypoint) <= trapAvoidanceWaypointReachDistance)
         {
+            trapAvoidanceGiveUpDestination = trapAvoidanceFinalDestination;
+            trapAvoidanceGiveUpUntil = Time.time + trapAvoidanceGiveUpDuration;
             hasTrapAvoidanceWaypoint = false;
             return false;
         }
@@ -1678,6 +1701,7 @@ public class VisitorAI : MonoBehaviour
         trapAvoidanceWaypointDistance = Mathf.Max(0f, trapAvoidanceWaypointDistance);
         trapAvoidanceWaypointReachDistance = Mathf.Max(0.01f, trapAvoidanceWaypointReachDistance);
         trapAvoidanceTimeout = Mathf.Max(0f, trapAvoidanceTimeout);
+        trapAvoidanceGiveUpDuration = Mathf.Max(0f, trapAvoidanceGiveUpDuration);
         footstepMinDistance = Mathf.Max(0f, footstepMinDistance);
         footstepMaxDistance = Mathf.Max(footstepMinDistance, footstepMaxDistance);
         footstepSpeedThreshold = Mathf.Max(0f, footstepSpeedThreshold);
