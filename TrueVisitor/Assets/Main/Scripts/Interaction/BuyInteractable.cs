@@ -3,6 +3,8 @@ using UnityEngine.Events;
 
 public class BuyInteractable : MonoBehaviour, IInteractable
 {
+    public static event System.Action<BuyInteractable> Purchased;
+
     [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private string itemId = "item";
     [SerializeField] private string displayName = "Item";
@@ -47,6 +49,7 @@ public class BuyInteractable : MonoBehaviour, IInteractable
 
         purchased = true;
         onPurchased?.Invoke();
+        Purchased?.Invoke(this);
 
         if (disableAfterPurchase)
         {
