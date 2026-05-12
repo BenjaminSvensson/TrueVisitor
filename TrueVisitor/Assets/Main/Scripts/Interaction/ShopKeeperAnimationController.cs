@@ -7,7 +7,7 @@ public class ShopKeeperAnimationController : MonoBehaviour
     private const string HappyStateName = "Happy";
 
     [SerializeField] private Animator animator;
-    [SerializeField] private Transform player;
+    [SerializeField, HideInInspector] private Transform player;
     [SerializeField] private float playerNearDistance = 5f;
     [SerializeField] private float crossFadeDuration = 0.15f;
     [SerializeField] private float seeingPlayerDuration = 2.5f;
