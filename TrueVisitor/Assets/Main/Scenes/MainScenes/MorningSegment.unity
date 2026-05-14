@@ -5205,6 +5205,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -5213,7 +5219,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -5251,7 +5256,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -5319,11 +5323,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &34517875
 Light:
   m_ObjectHideFlags: 0
@@ -5332,7 +5331,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 34517872}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -5384,7 +5383,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -5628,6 +5627,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: 0.025
+  m_Version: 14
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -5636,7 +5641,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -5674,7 +5678,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -5742,11 +5745,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &38360061
 Light:
   m_ObjectHideFlags: 0
@@ -5755,7 +5753,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 38360058}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -5807,7 +5805,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -15682,6 +15680,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -15690,7 +15694,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -15728,7 +15731,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -15796,11 +15798,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &208033194
 Light:
   m_ObjectHideFlags: 0
@@ -15809,7 +15806,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 208033191}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -15861,7 +15858,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -17900,6 +17897,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -17908,7 +17911,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -17946,7 +17948,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -18014,11 +18015,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &226802794
 Light:
   m_ObjectHideFlags: 0
@@ -18027,7 +18023,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 226802791}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -18079,7 +18075,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -25449,6 +25445,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -29104,6 +29101,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: 0.025
+  m_Version: 14
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -29112,7 +29115,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -29150,7 +29152,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -29218,11 +29219,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &356843636
 Light:
   m_ObjectHideFlags: 0
@@ -29231,7 +29227,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 356843633}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -29283,7 +29279,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -51275,6 +51271,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -51360,6 +51357,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -51368,7 +51371,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -51406,7 +51408,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -51474,11 +51475,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &482073872
 Light:
   m_ObjectHideFlags: 0
@@ -51487,7 +51483,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 482073869}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -51539,7 +51535,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -54877,6 +54873,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23c1ce4fb46143f46bc5cb5224c934f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.HDAdditionalCameraData
+  m_Version: 9
+  m_ObsoleteRenderingPath: 0
+  m_ObsoleteFrameSettings:
+    overrides: 0
+    enableShadow: 0
+    enableContactShadows: 0
+    enableShadowMask: 0
+    enableSSR: 0
+    enableSSAO: 0
+    enableSubsurfaceScattering: 0
+    enableTransmission: 0
+    enableAtmosphericScattering: 0
+    enableVolumetrics: 0
+    enableReprojectionForVolumetrics: 0
+    enableLightLayers: 0
+    enableExposureControl: 1
+    diffuseGlobalDimmer: 0
+    specularGlobalDimmer: 0
+    shaderLitMode: 0
+    enableDepthPrepassWithDeferredRendering: 0
+    enableTransparentPrepass: 0
+    enableMotionVectors: 0
+    enableObjectMotionVectors: 0
+    enableDecals: 0
+    enableRoughRefraction: 0
+    enableTransparentPostpass: 0
+    enableDistortion: 0
+    enablePostprocess: 0
+    enableOpaqueObjects: 0
+    enableTransparentObjects: 0
+    enableRealtimePlanarReflection: 0
+    enableMSAA: 0
+    enableAsyncCompute: 0
+    runLightListAsync: 0
+    runSSRAsync: 0
+    runSSAOAsync: 0
+    runContactShadowsAsync: 0
+    runVolumeVoxelizationAsync: 0
+    lightLoopSettings:
+      overrides: 0
+      enableDeferredTileAndCluster: 0
+      enableComputeLightEvaluation: 0
+      enableComputeLightVariants: 0
+      enableComputeMaterialVariants: 0
+      enableFptlForForwardOpaque: 0
+      enableBigTilePrepass: 0
+      isFptlEnabled: 0
   clearColorMode: 0
   backgroundColorHDR: {r: 0.025, g: 0.07, b: 0.19, a: 0}
   clearDepth: 1
@@ -54957,53 +55000,6 @@ MonoBehaviour:
       data1: 0
       data2: 0
   defaultFrameSettings: 0
-  m_Version: 9
-  m_ObsoleteRenderingPath: 0
-  m_ObsoleteFrameSettings:
-    overrides: 0
-    enableShadow: 0
-    enableContactShadows: 0
-    enableShadowMask: 0
-    enableSSR: 0
-    enableSSAO: 0
-    enableSubsurfaceScattering: 0
-    enableTransmission: 0
-    enableAtmosphericScattering: 0
-    enableVolumetrics: 0
-    enableReprojectionForVolumetrics: 0
-    enableLightLayers: 0
-    enableExposureControl: 1
-    diffuseGlobalDimmer: 0
-    specularGlobalDimmer: 0
-    shaderLitMode: 0
-    enableDepthPrepassWithDeferredRendering: 0
-    enableTransparentPrepass: 0
-    enableMotionVectors: 0
-    enableObjectMotionVectors: 0
-    enableDecals: 0
-    enableRoughRefraction: 0
-    enableTransparentPostpass: 0
-    enableDistortion: 0
-    enablePostprocess: 0
-    enableOpaqueObjects: 0
-    enableTransparentObjects: 0
-    enableRealtimePlanarReflection: 0
-    enableMSAA: 0
-    enableAsyncCompute: 0
-    runLightListAsync: 0
-    runSSRAsync: 0
-    runSSAOAsync: 0
-    runContactShadowsAsync: 0
-    runVolumeVoxelizationAsync: 0
-    lightLoopSettings:
-      overrides: 0
-      enableDeferredTileAndCluster: 0
-      enableComputeLightEvaluation: 0
-      enableComputeLightVariants: 0
-      enableComputeMaterialVariants: 0
-      enableFptlForForwardOpaque: 0
-      enableBigTilePrepass: 0
-      isFptlEnabled: 0
 --- !u!81 &524166472
 AudioListener:
   m_ObjectHideFlags: 0
@@ -58393,6 +58389,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -66660,6 +66657,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -66668,7 +66671,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -66706,7 +66708,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -66774,11 +66775,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &672855918
 Light:
   m_ObjectHideFlags: 0
@@ -66787,7 +66783,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 672855915}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -66839,7 +66835,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -69408,6 +69404,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -69416,7 +69418,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -69454,7 +69455,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -69522,11 +69522,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &726525120
 Light:
   m_ObjectHideFlags: 0
@@ -69535,7 +69530,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726525117}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -69587,7 +69582,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -74519,6 +74514,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -74527,7 +74528,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -74565,7 +74565,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -74633,11 +74632,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &812930264
 Light:
   m_ObjectHideFlags: 0
@@ -74646,7 +74640,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 812930261}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -74698,7 +74692,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -76957,6 +76951,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -106573,6 +106568,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -106581,7 +106582,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -106619,7 +106619,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -106687,11 +106686,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1193122056
 Light:
   m_ObjectHideFlags: 0
@@ -106700,7 +106694,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1193122053}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 550
@@ -106752,7 +106746,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 2
   m_LuxAtDistance: 1
@@ -107228,6 +107222,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -107236,7 +107236,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -107274,7 +107273,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -107342,11 +107340,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1204887390
 Light:
   m_ObjectHideFlags: 0
@@ -107355,7 +107348,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1204887388}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.8235304
@@ -107407,7 +107400,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 2
   m_LuxAtDistance: 1
@@ -111055,6 +111048,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -111063,7 +111062,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -111101,7 +111099,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -111169,11 +111166,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1260614426
 Light:
   m_ObjectHideFlags: 0
@@ -111182,7 +111174,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1260614423}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -111234,7 +111226,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -114838,6 +114830,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -114846,7 +114844,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -114884,7 +114881,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -114952,11 +114948,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1318426477
 Light:
   m_ObjectHideFlags: 0
@@ -114965,7 +114956,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1318426475}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1.1796198
@@ -115017,7 +115008,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -130171,6 +130162,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -130179,7 +130176,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -130217,7 +130213,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -130285,11 +130280,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1421141968
 Light:
   m_ObjectHideFlags: 0
@@ -130298,7 +130288,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1421141966}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 590.1993
@@ -130350,7 +130340,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -142131,6 +142121,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -142139,7 +142135,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -142177,7 +142172,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -142245,11 +142239,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1571957233
 Light:
   m_ObjectHideFlags: 0
@@ -142258,7 +142247,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1571957231}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
@@ -142310,7 +142299,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 2
   m_LuxAtDistance: 1
@@ -161216,6 +161205,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -161224,7 +161219,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -161262,7 +161256,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -161330,11 +161323,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1785283372
 Light:
   m_ObjectHideFlags: 0
@@ -161343,7 +161331,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1785283369}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -161395,7 +161383,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -164846,6 +164834,12 @@ MonoBehaviour:
   m_ShapeWidth: -1
   m_ShapeHeight: -1
   m_AspectRatio: -1
+  m_ShapeRadius: -1
+  m_Version: 15
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 512
+  m_ObsoleteContactShadows: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
   m_VolumetricDimmer: 1
@@ -164854,7 +164848,6 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
@@ -164892,7 +164885,6 @@ MonoBehaviour:
   m_FilterTracedShadow: 1
   m_FilterSizeTraced: 16
   m_SunLightConeAngle: 0.5
-  m_LightShadowRadius: 0.5
   m_SemiTransparentShadow: 0
   m_ColorShadow: 1
   m_DistanceBasedFiltering: 0
@@ -164960,11 +164952,6 @@ MonoBehaviour:
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
   m_AreaLightEmissiveMeshLayer: -1
-  m_Version: 14
-  m_ObsoleteShadowResolutionTier: 1
-  m_ObsoleteUseShadowQualitySettings: 0
-  m_ObsoleteCustomShadowResolution: 512
-  m_ObsoleteContactShadows: 0
 --- !u!108 &1843252211
 Light:
   m_ObjectHideFlags: 0
@@ -164973,7 +164960,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1843252208}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 27.5268
@@ -165025,7 +165012,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0.025
   m_ShadowAngle: 0
   m_LightUnit: 0
   m_LuxAtDistance: 1
@@ -174216,6 +174203,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
