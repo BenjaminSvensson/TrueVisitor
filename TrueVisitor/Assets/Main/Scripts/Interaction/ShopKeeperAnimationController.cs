@@ -2,21 +2,21 @@ using UnityEngine;
 
 public class ShopKeeperAnimationController : MonoBehaviour
 {
-    private const string IdleStateName = "Idle";
-    private const string SeeingPlayerStateName = "SeeingPlayer";
-    private const string HappyStateName = "Happy";
+    private const int IdleState = 0;
+    private const int SeeingPlayerState = 1;
+    private const int HappyState = 2;
+    private static readonly int ShopKeeperStateHash = Animator.StringToHash("ShopKeeperState");
 
     [SerializeField] private Animator animator;
     [SerializeField, HideInInspector] private Transform player;
     [SerializeField] private float playerNearDistance = 5f;
-    [SerializeField] private float crossFadeDuration = 0.15f;
     [SerializeField] private float seeingPlayerDuration = 2.5f;
     [SerializeField] private float happyDuration = 2.5f;
 
     private bool hasSeenPlayer;
     private float seeingPlayerUntilTime;
     private float happyUntilTime;
-    private string currentStateName;
+    private int currentState = -1;
 
     private void Awake()
     {
@@ -24,12 +24,14 @@ public class ShopKeeperAnimationController : MonoBehaviour
         {
             animator = GetComponentInChildren<Animator>();
         }
+
+        SetAnimatorState(IdleState);
     }
 
     private void OnEnable()
     {
         BuyInteractable.Purchased += HandlePurchased;
-        Play(IdleStateName);
+        SetAnimatorState(IdleState);
     }
 
     private void OnDisable()
@@ -41,13 +43,13 @@ public class ShopKeeperAnimationController : MonoBehaviour
     {
         if (Time.time < happyUntilTime)
         {
-            Play(HappyStateName);
+            SetAnimatorState(HappyState);
             return;
         }
 
         if (Time.time < seeingPlayerUntilTime)
         {
-            Play(SeeingPlayerStateName);
+            SetAnimatorState(SeeingPlayerState);
             return;
         }
 
@@ -55,17 +57,17 @@ public class ShopKeeperAnimationController : MonoBehaviour
         {
             hasSeenPlayer = true;
             seeingPlayerUntilTime = Time.time + seeingPlayerDuration;
-            Play(SeeingPlayerStateName);
+            SetAnimatorState(SeeingPlayerState);
             return;
         }
 
-        Play(IdleStateName);
+        SetAnimatorState(IdleState);
     }
 
     public void PlayHappy()
     {
         happyUntilTime = Time.time + happyDuration;
-        Play(HappyStateName);
+        SetAnimatorState(HappyState);
     }
 
     private void HandlePurchased(BuyInteractable buyInteractable)
@@ -101,14 +103,14 @@ public class ShopKeeperAnimationController : MonoBehaviour
         return player;
     }
 
-    private void Play(string stateName)
+    private void SetAnimatorState(int state)
     {
-        if (animator == null || currentStateName == stateName)
+        if (animator == null || currentState == state)
         {
             return;
         }
 
-        currentStateName = stateName;
-        animator.CrossFadeInFixedTime(stateName, crossFadeDuration);
+        currentState = state;
+        animator.SetInteger(ShopKeeperStateHash, state);
     }
 }
